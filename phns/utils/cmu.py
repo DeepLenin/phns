@@ -1,6 +1,7 @@
 import os
 
-cmu_path = os.path.dirname(os.path.realpath(__file__)) + "/../vendor/cmudict.dict"
+cmu_path = os.path.dirname(os.path.realpath(__file__))
+cmu_path += "/../vendor/cmudict/cmudict.dict"
 
 cmu = {}
 for line in open(cmu_path).readlines():
