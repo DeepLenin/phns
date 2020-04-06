@@ -1,4 +1,4 @@
 from .text import from_text
-from .compare import compare
+from .compare import compare, closest
 
-__all__ = ["from_text", "compare"]
+__all__ = ["from_text", "compare", "closest"]

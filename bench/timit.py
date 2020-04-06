@@ -26,14 +26,17 @@ for text_path in glob(root + "/data/lisa/data/timit/raw/TIMIT/*/*/*/*.TXT"):
 
 cers = []
 for item in data:
-    calculated_phns = phns.from_text(item["text"])
-    if not calculated_phns:
+    calculated_phns_variants = phns.from_text(item["text"])
+    if not calculated_phns_variants:
         continue
 
-    comparison = phns.compare(item["phns"], calculated_phns)
-    cers.append(comparison["cer"])
-    # comparison["diff"]
-    # analyze error types
+    best = phns.closest(item["phns"], calculated_phns_variants)
+    cers.append(best["cer"])
 
-cers = np.array(cers)
-# print({ 'cers.percentile
+print(cers)
+print({
+    '25%': np.percentile(cers, 25),
+    '50%': np.percentile(cers, 50),
+    '75%': np.percentile(cers, 75),
+    '95%': np.percentile(cers, 95)
+})
