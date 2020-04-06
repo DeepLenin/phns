@@ -2,7 +2,7 @@ import editdistance
 
 
 def closest(phns, variants):
-    best = { "cer": float("inf") }
+    best = {"cer": float("inf")}
     for variant in variants:
         comparison = compare(phns, variant)
         if comparison["cer"] < best["cer"]:
