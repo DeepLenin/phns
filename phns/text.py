@@ -2,10 +2,8 @@ import os
 import itertools
 from .utils import cmu
 
-DEBUG = os.getenv("DEBUG", True)
 
-
-def split(text):
+def __split__(text):
     return text.lower()    \
         .replace(".", "")  \
         .replace("\n", "") \
@@ -16,21 +14,25 @@ def split(text):
         .replace("\"", "") \
         .replace("!", "")  \
         .replace("-", " ") \
-        .split(" ")
+        .split()
 
 
-def from_text(text):
-    words = split(text)
+# TODO: add tests for missing_handler
+def from_text(text, missing_handler=lambda _: False):
+    words = __split__(text)
+
+    if not callable(missing_handler):
+        raise TypeError("missing_handler should be callable")
 
     cmu_phns = []
-    missed_words = []
+    skip = False
 
     for word in words:
-        if word not in cmu:
-            if DEBUG:
-                print("word not in dict: ", word)
-                missed_words.append(word)
-            continue
-        cmu_phns.append(cmu[word])
+        transcription = cmu.get(word) or missing_handler(word)
+        if transcription:
+            cmu_phns.append(transcription)
+        else:
+            skip = True
 
-    return list(itertools.product(*cmu_phns))
+    if not skip:
+        return list(itertools.product(*cmu_phns))

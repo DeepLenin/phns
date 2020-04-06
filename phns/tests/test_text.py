@@ -9,7 +9,6 @@ def test_from_text_single_word():
 
 def test_from_text_multiple_words():
     res = from_text("hello world abzug")
-    print(res)
     assert len(res) == 4
     assert res == [
         (["hh", "ah", "l", "ow"], ["w", "er", "l", "d"], ["ae", "b", "z", "ah", "g"]),
@@ -17,3 +16,14 @@ def test_from_text_multiple_words():
         (["hh", "eh", "l", "ow"], ["w", "er", "l", "d"], ["ae", "b", "z", "ah", "g"]),
         (["hh", "eh", "l", "ow"], ["w", "er", "l", "d"], ["ae", "b", "z", "uh", "g"])
     ]
+
+
+def test_from_text_missing_handler():
+    res = from_text("foobar42", lambda _: [666])
+    assert res == [(666,)]
+
+
+def test_from_text_missing_handler_skip():
+    res = from_text("foobar42", lambda _: False)
+    assert res is None
+
