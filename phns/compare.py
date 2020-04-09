@@ -1,4 +1,5 @@
 import editdistance
+from .utils import flatten
 
 
 def closest(phns, variants):
@@ -12,15 +13,10 @@ def closest(phns, variants):
 
 
 def compare(phns1, phns2):
-    distance = editdistance.eval(__flatten__(phns1), __flatten__(phns2))
+    distance = editdistance.eval(flatten(phns1), flatten(phns2))
     return {
         "distance": distance,
         "cer": distance/len(phns1)
     }
 
 
-def __flatten__(lst):
-    if isinstance(lst[0], list):
-        return [item for sublist in lst for item in sublist]
-    else:
-        return lst

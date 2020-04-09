@@ -1,17 +1,18 @@
-from .utils import single_char_encode
+import itertools
+from copy import deepcopy
+from .utils import single_char_encode, flatten
 
 def apply(pronunciations):
     result = {}
     for pronunciation in pronunciations:
-        for heuristic in speech_heuristics:
+        for heuristic in [assimilate]:
             new_pronunciations = heuristic(pronunciation)
             for new_pronunciation in new_pronunciations:
-                result[single_char_encode(new_pronunciation)] = new_pronunciation
-    return result.values()
+                result[single_char_encode(flatten(new_pronunciation))] = new_pronunciation
+    return list(result.values())
 
 
 def assimilate(pronunciation):
-    result = [pronunciation]
     replacements = []
     for i in range(len(pronunciation)-1):
         word = pronunciation[i]
@@ -21,23 +22,31 @@ def assimilate(pronunciation):
         phn2 = next_word[0]
 
         rules = {
-            ('t', 'b'): ('p', 'b'), # fat boy
-            ('d', 'b'): ('b'), # good boy
-            ('n', 'm'): ('m') # ten men
+            ('t', 'b'): 'p', # fat boy
+            ('d', 'b'): 'b', # good boy
+            ('n', 'm'): 'm' # ten men
         }
 
-        replacements.append([identity, rules.get((phn1, phn2)).bind(i)])
-        
-        # [[identity, replace1], [identity, replace2]]
-        # product apply
-        # [[identity, identity] [replace1, identity], [identity replace2] [replace1 replace2]]
+        new_phn1 = rules.get((phn1, phn2))
+        if new_phn1:
+            replacements.append([None, [i, 'change_last', new_phn1]])
 
-        if replace:
-            
+    # [[None replace1] [None replace2]]
+    # product
+    # [[None None] [replace1 None] [None replace2] [replace1 replace2]]
+    replace_sequences = itertools.product(*replacements)
+    result = []
+    for seq in replace_sequences:
+        new_pronunciation = deepcopy(pronunciation)
+        for step in seq:
+            if step:
+                index, rule, data = step
+            else:
+                continue
 
-            fat boy will come:
-                1. fat boy with good boy
-                2. fap boy with good boy
-                3. fat boy with goob boy
-                4. fap boy with goob boy
-            
+            if rule == 'change_last':
+                new_pronunciation[index][-1] = data
+
+        result.append(new_pronunciation)
+
+    return result
