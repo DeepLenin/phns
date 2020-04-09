@@ -1,5 +1,6 @@
 import os
 import itertools
+from . import heuristics
 from .utils import cmu
 
 
@@ -18,7 +19,7 @@ def __split__(text):
 
 
 # TODO: add tests for missing_handler
-def from_text(text, missing_handler=lambda _: False):
+def from_text(text, missing_handler=lambda _: False, apply_heuristics=True):
     words = __split__(text)
 
     if not callable(missing_handler):
@@ -35,4 +36,7 @@ def from_text(text, missing_handler=lambda _: False):
             skip = True
 
     if not skip:
-        return list(itertools.product(*cmu_phns))
+        different_pronunciations = list(itertools.product(*cmu_phns))
+        if apply_heuristics:
+            different_pronunciations = heuristics.apply(different_pronunciations)
+        return different_pronunciations
