@@ -32,7 +32,7 @@ def assimilate(pronunciation):
             ('n', 'k'): 'ng', # own car
             ('n', 'g'): 'ng', # been going
             ('s', 'sh'): 'sh', # this shiny
-            ('z', 'sh'): 'zh', #
+            ('z', 'sh'): 'zh', # cheese shop
         }
 
         new_phn1 = rules.get((phn1, phn2))
