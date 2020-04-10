@@ -24,7 +24,15 @@ def assimilate(pronunciation):
         rules = {
             ('t', 'b'): 'p', # fat boy
             ('d', 'b'): 'b', # good boy
-            ('n', 'm'): 'm' # ten men
+            ('n', 'm'): 'm', # ten men
+            ('t', 'k'): 'k', # that cat
+            ('t', 'g'): 'k', # that girl
+            ('d', 'k'): 'g', # good concert
+            ('d', 'g'): 'g', # good girl
+            ('n', 'k'): 'ng', # own car
+            ('n', 'g'): 'ng', # been going
+            ('s', 'sh'): 'sh', # this shiny
+            ('z', 'sh'): 'zh', #
         }
 
         new_phn1 = rules.get((phn1, phn2))

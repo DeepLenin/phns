@@ -1,7 +1,7 @@
 from .cmu import cmu
-from .mapper import remap, single_char_encode
+from .mapper import timit_to_cmu, single_char_encode
 
-__all__ = ["cmu", "remap", "remove_doubles", "single_char_encode", "flatten"]
+__all__ = ["cmu", "timit_to_cmu", "remove_doubles", "single_char_encode", "flatten"]
 
 
 def flatten(lst):

@@ -18,10 +18,10 @@ with open(DATA_PATH + "timit_bench.pkl", "rb") as f:
 cers = []
 for item in tqdm(data):
     # Preprocessing data
-    _phns = phns.utils.remap(item["phns"])
+    _phns = phns.utils.timit_to_cmu(item["phns"])
     _phns = [phn for phn in _phns if phn != "sil"]
 
-    calculated_phns_variants = phns.from_text(item["text"])
+    calculated_phns_variants = phns.from_text(item["text"], apply_heuristics=True)
     if not calculated_phns_variants:
         continue
 
