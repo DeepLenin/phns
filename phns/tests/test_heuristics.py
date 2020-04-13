@@ -22,5 +22,5 @@ def test_assimilate_with_two_changes():
 
 def test_assimilate_coalescence():
     canonical = [['g', 'uh', 'd'], ['y', 'ih', 'r']]
-    changed   = [['g', 'uh', 'jh'], ['ih', 'r']]
+    changed   = [['g', 'uh'], ['jh', 'ih', 'r']]
     assert apply([canonical]) == [canonical, changed]

@@ -2,13 +2,31 @@ import itertools
 from copy import deepcopy
 from .utils import single_char_encode, flatten
 
+RULES = {
+    'assimilate_last': {
+        ('t', 'b'): 'p', # fat boy
+        ('d', 'b'): 'b', # good boy
+        ('n', 'm'): 'm', # ten men
+        ('t', 'k'): 'k', # that cat
+        ('t', 'g'): 'k', # that girl
+        ('d', 'k'): 'g', # good concert
+        ('d', 'g'): 'g', # good girl
+        ('n', 'k'): 'ng', # own car
+        ('n', 'g'): 'ng', # been going
+        ('s', 'sh'): 'sh', # this shiny
+        ('z', 'sh'): 'zh', # cheese shop
+    },
+    'assimilate_coalescence': {
+        ('t', 'y'): 'ch', # last year
+        ('d', 'y'): 'jh', # would you
+    }
+}
+
+
 def apply(pronunciations):
     result = {}
     for pronunciation in pronunciations:
-        modifications = []
-        for heuristic in [assimilate, elision]:
-            modifications.extend(heuristic(pronunciation))
-
+        modifications = find_modifications(pronunciation)
 
         # [[None replace1] [None replace2]]
         # product
@@ -23,16 +41,16 @@ def apply(pronunciations):
                 new_pronunciation = deepcopy(pronunciation)
                 for step in seq:
                     if step:
-                        index, rule, data = step
+                        word_id, phn_id, heuristic, data = step
                     else:
                         continue
 
-                    if rule == 'change_last':
-                        new_pronunciation[index][-1] = data
+                    if heuristic == 'assimilate_last':
+                        new_pronunciation[word_id][phn_id] = data
 
-                    if rule == 'coalesce':
-                        new_pronunciation[index][-1] = data
-                        del new_pronunciation[index + 1][0]
+                    if heuristic == 'assimilate_coalescence':
+                        del new_pronunciation[word_id][phn_id]
+                        new_pronunciation[word_id+1][0] = data
 
                 new_pronunciations.append(new_pronunciation)
 
@@ -43,44 +61,41 @@ def apply(pronunciations):
     return list(result.values())
 
 
-def assimilate(pronunciation):
-    replacements = []
-    for i in range(len(pronunciation)-1):
-        word = pronunciation[i]
-        next_word = pronunciation[i+1]
 
-        phn1 = word[-1]
-        phn2 = next_word[0]
+def find_modifications(pronunciation):
+    modifications = []
 
-        change_last_rules = {
-            ('t', 'b'): 'p', # fat boy
-            ('d', 'b'): 'b', # good boy
-            ('n', 'm'): 'm', # ten men
-            ('t', 'k'): 'k', # that cat
-            ('t', 'g'): 'k', # that girl
-            ('d', 'k'): 'g', # good concert
-            ('d', 'g'): 'g', # good girl
-            ('n', 'k'): 'ng', # own car
-            ('n', 'g'): 'ng', # been going
-            ('s', 'sh'): 'sh', # this shiny
-            ('z', 'sh'): 'zh', # cheese shop
-        }
+    for word_id in range(len(pronunciation)):
+        word = pronunciation[word_id]
+        
+        for phn_id in range(len(word)):
+            phn = word[phn_id]
+            prev_phn = None
+            next_phn = None
 
-        new_phn1 = change_last_rules.get((phn1, phn2))
-        if new_phn1:
-            replacements.append([None, [i, 'change_last', new_phn1]])
+            if phn_id == 0:
+                if word_id > 0:
+                    prev_phn = pronunciation[word_id-1][-1]
+            else:
+                prev_phn = word[phn_id-1]
 
 
-        coalesce_rules = {
-            ('t', 'y'): 'ch', # last year
-            ('d', 'y'): 'jh', # would you
-        }
+            if phn_id == len(word) - 1:
+                if word_id < len(pronunciation)-1:
+                    next_phn = pronunciation[word_id+1][0]
+            else:
+                next_phn = word[phn_id+1]
 
-        coalescent_phn = coalesce_rules.get((phn1, phn2))
-        if coalescent_phn:
-            replacements.append([None, [i, 'coalesce', coalescent_phn]])
 
-    return replacements
+            if phn_id == len(word)-1 and next_phn:
+                for heuristic in ['assimilate_last', 'assimilate_coalescence']:
+                    data = RULES[heuristic].get((phn, next_phn))
+                    if data:
+                        modifications.append([None, [word_id, phn_id, heuristic, data]])
+
+    return modifications
+
+
 
 
 def elision(pronunciation):
