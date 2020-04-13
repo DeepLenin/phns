@@ -73,7 +73,7 @@ TIMIT_TO_CMU = {
 # ARPABET covers CMU but bigger (47 > 40)
 ARPABET_TO_ONE_LETTER = {'aa': 'a', 'ae': '@', 'ah': 'A', 'ao': 'c', 'aw': 'W', 'ax': 'x', 'ay': 'Y', 'b': 'b', 'ch': 'C', 'cl': '-', 'd': 'd', 'dh': 'D', 'dx': 'F', 'eh': 'E', 'el': 'L', 'en': 'N', 'epi': '=', 'er': 'R', 'ey': 'e', 'f': 'f', 'g': 'g', 'hh': 'h', 'ih': 'I', 'ix': 'X', 'iy': 'i', 'jh': 'J', 'k': 'k', 'l': 'l', 'm': 'm', 'n': 'n', 'ng': 'G', 'ow': 'o', 'oy': 'O', 'p': 'p', 'r': 'r', 's': 's', 'sh': 'S', 'sil': '_', 't': 't', 'th': 'T', 'uh': 'U', 'uw': 'u', 'v': 'v', 'w': 'w', 'y': 'y', 'z': 'z', 'zh': 'Z' }
 
-ARPABET_CONSONANTS = [ 'b', 'ch', 'd', 'dh', 'dx', 'el', 'em', 'en', 'f', 'g', 'hh', 'jh', 'k', 'l', 'm', 'n', 'ng', 'n', 'p', 'q', 'r', 's', 'sh', 't', 'th', 'v', 'w', 'wh', 'y', 'z', 'zh' ]
+ARPABET_CONSONANTS = { 'b', 'ch', 'd', 'dh', 'dx', 'el', 'em', 'en', 'f', 'g', 'hh', 'jh', 'k', 'l', 'm', 'n', 'ng', 'n', 'p', 'q', 'r', 's', 'sh', 't', 'th', 'v', 'w', 'wh', 'y', 'z', 'zh' }
 
 
 

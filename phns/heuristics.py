@@ -1,6 +1,7 @@
 import itertools
 from copy import deepcopy
 from .utils import single_char_encode, flatten
+from .utils.mapper import ARPABET_CONSONANTS
 
 RULES = {
     'assimilate_last': {
@@ -37,13 +38,17 @@ def apply(pronunciations):
         else:
             replace_sequences = itertools.product(*modifications)
             new_pronunciations = []
+
+            # TODO: add test for order of seq
+            # TODO: add test for elision
             for seq in replace_sequences:
                 new_pronunciation = deepcopy(pronunciation)
+                seq = [step for step in seq if step]
+                seq.sort(key=lambda x: x[:2])
+                seq.reverse()
+
                 for step in seq:
-                    if step:
-                        word_id, phn_id, heuristic, data = step
-                    else:
-                        continue
+                    word_id, phn_id, heuristic, data = step
 
                     if heuristic == 'assimilate_last':
                         new_pronunciation[word_id][phn_id] = data
@@ -51,6 +56,9 @@ def apply(pronunciations):
                     if heuristic == 'assimilate_coalescence':
                         del new_pronunciation[word_id][phn_id]
                         new_pronunciation[word_id+1][0] = data
+
+                    if heuristic == 'consonant_cluster':
+                        del new_pronunciation[word_id][phn_id]
 
                 new_pronunciations.append(new_pronunciation)
 
@@ -93,10 +101,7 @@ def find_modifications(pronunciation):
                     if data:
                         modifications.append([None, [word_id, phn_id, heuristic, data]])
 
+            if phn in {'t','d'} and prev_phn in ARPABET_CONSONANTS and next_phn in ARPABET_CONSONANTS:
+                modifications.append([None, [word_id, phn_id, 'consonant_cluster', None]])
+
     return modifications
-
-
-
-
-def elision(pronunciation):
-    return []
