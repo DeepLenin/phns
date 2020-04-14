@@ -1,7 +1,15 @@
-from .cmu import cmu
+from .cmu import cmu, Phn
 from .mapper import timit_to_cmu, single_char_encode
 
-__all__ = ["cmu", "timit_to_cmu", "remove_doubles", "single_char_encode", "flatten"]
+__all__ = [
+    "cmu",
+    "deep_str",
+    "deep_phn",
+    "flatten",
+    "remove_doubles",
+    "single_char_encode",
+    "timit_to_cmu",
+]
 
 
 def flatten(lst):
@@ -18,3 +26,17 @@ def remove_doubles(arr):
             continue
         res.append(el)
     return res
+
+
+def deep_str(obj):
+    if isinstance(obj, list):
+        return [deep_str(subobj) for subobj in obj]
+    else:
+        return str(obj)
+
+
+def deep_phn(obj):
+    if isinstance(obj, list):
+        return [deep_phn(subobj) for subobj in obj]
+    else:
+        return Phn(obj)
