@@ -1,6 +1,6 @@
 import itertools
 from copy import deepcopy
-from .utils import single_char_encode, flatten
+from .utils import single_char_encode, flatten, remove_doubles
 from .utils.mapper import ARPABET_CONSONANTS
 
 RULES = {
@@ -69,7 +69,9 @@ def apply(pronunciations):
 
 
         for new_pronunciation in new_pronunciations:
-            result[single_char_encode(flatten(new_pronunciation))] = new_pronunciation
+            key = remove_doubles(flatten(new_pronunciation))
+            key = single_char_encode(key)
+            result[key] = [remove_doubles(word) for word in new_pronunciation]
 
     return sorted(list(result.values()))
 

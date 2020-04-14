@@ -37,6 +37,7 @@ def from_text(text, missing_handler=lambda _: False, apply_heuristics=True):
 
     if not skip:
         different_pronunciations = list(itertools.product(*cmu_phns))
+        different_pronunciations = [list(pron) for pron in different_pronunciations]
         if apply_heuristics:
             different_pronunciations = heuristics.apply(different_pronunciations)
         return different_pronunciations

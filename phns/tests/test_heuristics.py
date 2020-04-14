@@ -48,3 +48,9 @@ def test_seq_order_2():
     changed2 = [["f", "ae", "k", "t", "ch", "ae", "p"], ["b", "ae", "d"]]
     changed3 = [["f", "ae", "k", "ch", "ae", "p"], ["b", "ae", "d"]]
     assert apply([canonical]) == sorted([canonical, changed1, changed2, changed3])
+
+
+def test_consonant_cluster_doubles():
+    canonical = [["t", "eh", "k", "s", "t", "s"]]
+    changed = [["t", "eh", "k", "s"]]
+    assert apply([canonical]) == sorted([canonical, changed])
