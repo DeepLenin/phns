@@ -5,6 +5,9 @@ class Phn:
     PHONEMES = {}
 
     def __new__(cls, val):
+        if isinstance(val, Phn):
+            return val
+
         _phn = val.lower()
         _phn = val.replace("0", "")
         if _phn not in cls.PHONEMES:
@@ -35,6 +38,9 @@ class Phn:
 
     def __repr__(self):
         return f"Phn(\"{self.__phoneme__}\")"
+
+    def __deepcopy__(self, memo={}):
+        return self
 
 cmu_path = os.path.dirname(os.path.realpath(__file__))
 cmu_path += "/../vendor/cmudict/cmudict.dict"

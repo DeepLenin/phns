@@ -21,18 +21,30 @@ def test_from_text_multiple_words():
 
 def test_from_text_multiple_words_with_heuristics():
     res = from_text("fat boy texts good girl", apply_heuristics=True)
-    assert len(res) == 4
+    assert len(res) == 16
     assert deep_str(res) == [
-        [["hh", "ah", "l", "ow"], ["w", "er", "l", "d"], ["ae", "b", "z", "ah", "g"]],
-        [["hh", "ah", "l", "ow"], ["w", "er", "l", "d"], ["ae", "b", "z", "uh", "g"]],
-        [["hh", "eh", "l", "ow"], ["w", "er", "l", "d"], ["ae", "b", "z", "ah", "g"]],
-        [["hh", "eh", "l", "ow"], ["w", "er", "l", "d"], ["ae", "b", "z", "uh", "g"]]
+        [['f', 'ae', 'p'], ['b', 'oy'], ['t', 'eh', 'k', 's'], ['g', 'ih', 'd'], ['g', 'er', 'l']],
+        [['f', 'ae', 'p'], ['b', 'oy'], ['t', 'eh', 'k', 's'], ['g', 'ih', 'g'], ['g', 'er', 'l']],
+        [['f', 'ae', 'p'], ['b', 'oy'], ['t', 'eh', 'k', 's'], ['g', 'uh', 'd'], ['g', 'er', 'l']],
+        [['f', 'ae', 'p'], ['b', 'oy'], ['t', 'eh', 'k', 's'], ['g', 'uh', 'g'], ['g', 'er', 'l']],
+        [['f', 'ae', 'p'], ['b', 'oy'], ['t', 'eh', 'k', 's', 't', 's'], ['g', 'ih', 'd'], ['g', 'er', 'l']],
+        [['f', 'ae', 'p'], ['b', 'oy'], ['t', 'eh', 'k', 's', 't', 's'], ['g', 'ih', 'g'], ['g', 'er', 'l']],
+        [['f', 'ae', 'p'], ['b', 'oy'], ['t', 'eh', 'k', 's', 't', 's'], ['g', 'uh', 'd'], ['g', 'er', 'l']],
+        [['f', 'ae', 'p'], ['b', 'oy'], ['t', 'eh', 'k', 's', 't', 's'], ['g', 'uh', 'g'], ['g', 'er', 'l']],
+        [['f', 'ae', 't'], ['b', 'oy'], ['t', 'eh', 'k', 's'], ['g', 'ih', 'd'], ['g', 'er', 'l']],
+        [['f', 'ae', 't'], ['b', 'oy'], ['t', 'eh', 'k', 's'], ['g', 'ih', 'g'], ['g', 'er', 'l']],
+        [['f', 'ae', 't'], ['b', 'oy'], ['t', 'eh', 'k', 's'], ['g', 'uh', 'd'], ['g', 'er', 'l']],
+        [['f', 'ae', 't'], ['b', 'oy'], ['t', 'eh', 'k', 's'], ['g', 'uh', 'g'], ['g', 'er', 'l']],
+        [['f', 'ae', 't'], ['b', 'oy'], ['t', 'eh', 'k', 's', 't', 's'], ['g', 'ih', 'd'], ['g', 'er', 'l']],
+        [['f', 'ae', 't'], ['b', 'oy'], ['t', 'eh', 'k', 's', 't', 's'], ['g', 'ih', 'g'], ['g', 'er', 'l']],
+        [['f', 'ae', 't'], ['b', 'oy'], ['t', 'eh', 'k', 's', 't', 's'], ['g', 'uh', 'd'], ['g', 'er', 'l']],
+        [['f', 'ae', 't'], ['b', 'oy'], ['t', 'eh', 'k', 's', 't', 's'], ['g', 'uh', 'g'], ['g', 'er', 'l']]
     ]
 
 
 def test_from_text_missing_handler():
-    res = from_text("foobar42", lambda _: ['p'])
-    assert res == [[['p']]]
+    res = from_text("foobar42", lambda _: [['p']])
+    assert deep_str(res) == [[['p']]]
 
 
 def test_from_text_missing_handler_skip():

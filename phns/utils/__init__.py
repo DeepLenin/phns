@@ -36,6 +36,9 @@ def deep_str(obj):
 
 
 def deep_phn(obj):
+    if not obj:
+        return obj
+
     if isinstance(obj, list):
         return [deep_phn(subobj) for subobj in obj]
     else:

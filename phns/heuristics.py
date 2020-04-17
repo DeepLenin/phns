@@ -1,5 +1,6 @@
 import itertools
 from copy import deepcopy
+from .utils.cmu import Phn
 from .utils import single_char_encode, flatten, remove_doubles
 from .utils.mapper import ARPABET_CONSONANTS
 
@@ -104,11 +105,13 @@ def find_modifications(pronunciation):
 
             if phn_id == len(word)-1 and next_phn:
                 for heuristic in ["assimilate_last", "assimilate_coalescence"]:
-                    data = RULES[heuristic].get((phn, next_phn))
+                    data = RULES[heuristic].get((phn.val, next_phn.val))
                     if data:
-                        modifications.append([None, [word_id, phn_id, heuristic, data]])
+                        modifications.append([None, [word_id, phn_id, heuristic, Phn(data)]])
 
-            if phn in {"t", "d"} and prev_phn in ARPABET_CONSONANTS and next_phn in ARPABET_CONSONANTS:
+            if phn.val in {"t", "d"} and \
+               (prev_phn and prev_phn.val) in ARPABET_CONSONANTS and \
+               (next_phn and next_phn.val) in ARPABET_CONSONANTS:
                 modifications.append([None, [word_id, phn_id, "consonant_cluster", None]])
 
     return modifications

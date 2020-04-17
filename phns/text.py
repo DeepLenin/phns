@@ -1,7 +1,7 @@
 import os
 import itertools
 from . import heuristics
-from .utils import cmu
+from .utils import cmu, deep_phn
 
 
 def __split__(text):
@@ -29,7 +29,7 @@ def from_text(text, missing_handler=lambda _: False, apply_heuristics=True):
     skip = False
 
     for word in words:
-        transcription = cmu.get(word) or missing_handler(word)
+        transcription = cmu.get(word) or deep_phn(missing_handler(word))
         if transcription:
             cmu_phns.append(transcription)
         else:
