@@ -3,7 +3,7 @@ from phns.utils import deep_str
 
 
 def test_from_text_single_word():
-    res = from_text("hello")
+    res = from_text("hello", apply_heuristics=False)
     assert len(res) == 2
     assert deep_str(res[0]) == [["hh", "ah", "l", "ow"]]
 

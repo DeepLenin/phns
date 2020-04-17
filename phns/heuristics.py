@@ -30,13 +30,13 @@ def apply(pronunciations):
     for pronunciation in pronunciations:
         modifications = find_modifications(pronunciation)
 
-        # [[None replace1] [None replace2]]
-        # product
-        # [[None None] [replace1 None] [None replace2] [replace1 replace2]]
-
         if not modifications:
             new_pronunciations = [pronunciation]
         else:
+            # [[None replace1] [None replace2]]
+            # product
+            # [[None None] [replace1 None] [None replace2] [replace1 replace2]]
+            modifications = [[None, mod] for mod in modifications]
             replace_sequences = itertools.product(*modifications)
             new_pronunciations = []
 
@@ -64,6 +64,9 @@ def apply(pronunciations):
                         new_pronunciation[word_id+1][0] = data
 
                     if heuristic == "consonant_cluster":
+                        del new_pronunciation[word_id][phn_id]
+
+                    if heuristic == "unstressed_ah":
                         del new_pronunciation[word_id][phn_id]
 
                 new_pronunciations.append(new_pronunciation)
@@ -107,11 +110,14 @@ def find_modifications(pronunciation):
                 for heuristic in ["assimilate_last", "assimilate_coalescence"]:
                     data = RULES[heuristic].get((phn.val, next_phn.val))
                     if data:
-                        modifications.append([None, [word_id, phn_id, heuristic, Phn(data)]])
+                        modifications.append([word_id, phn_id, heuristic, Phn(data)])
 
             if phn.val in {"t", "d"} and \
                (prev_phn and prev_phn.val) in ARPABET_CONSONANTS and \
                (next_phn and next_phn.val) in ARPABET_CONSONANTS:
-                modifications.append([None, [word_id, phn_id, "consonant_cluster", None]])
+                modifications.append([word_id, phn_id, "consonant_cluster", None])
+
+            if phn.val == 'ah' and not phn.stress:
+                modifications.append([word_id, phn_id, "unstressed_ah", None])
 
     return modifications

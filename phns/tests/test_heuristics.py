@@ -3,7 +3,7 @@ from phns.utils import deep_phn
 
 
 def test_assimilate_without_changes():
-    canonical = deep_phn([["dh", "ah"], ["b", "oy"]])  # the boy
+    canonical = deep_phn([["dh", "ah1"], ["b", "oy"]])  # the boy
     assert apply([canonical]) == [canonical]
 
 
@@ -54,4 +54,9 @@ def test_seq_order_2():
 def test_consonant_cluster_doubles():
     canonical = deep_phn([["t", "eh", "k", "s", "t", "s"]])
     changed = deep_phn([["t", "eh", "k", "s"]])
+    assert apply([canonical]) == sorted([canonical, changed])
+
+def test_unstressed_ah():
+    canonical = deep_phn([["p", "ah0", "l", "iy1", "s"]])
+    changed = deep_phn([["p", "l", "iy1", "s"]])
     assert apply([canonical]) == sorted([canonical, changed])
