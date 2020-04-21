@@ -1,5 +1,5 @@
 import editdistance
-from .utils import flatten, remove_doubles
+from .utils import flatten, remove_doubles, deep_str
 
 
 def closest(phns, variants):
@@ -13,8 +13,8 @@ def closest(phns, variants):
 
 
 def compare(phns1, phns2):
-    _p1 = remove_doubles(flatten(phns1))
-    _p2 = remove_doubles(flatten(phns2))
+    _p1 = remove_doubles(deep_str(flatten(phns1)))
+    _p2 = remove_doubles(deep_str(flatten(phns2)))
     distance = editdistance.eval(_p1, _p2)
     return {
         "distance": distance,

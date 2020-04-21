@@ -35,17 +35,17 @@ def test_compare_sublist_del():
 
 def test_closest():
     phns = ["a", "b", "c"]
-    variants = [("a", "b", "c", "d", "e"), ("a", "b")]
+    variants = [["a", "b", "c", "d", "e"], ["a", "b"]]
     res = closest(phns, variants)
     assert res["cer"] == 1 / len(phns)
     assert res["distance"] == 1
-    assert res["phns"] == ("a", "b")
+    assert res["phns"] == ["a", "b"]
 
 
 def test_closest_equal():
     phns = ["a", "b", "c"]
-    variants = [("a", "b", "c", "d"), ("a", "b")]
+    variants = [["a", "b", "c", "d"], ["a", "b"]]
     res = closest(phns, variants)
     assert res["cer"] == 1 / len(phns)
     assert res["distance"] == 1
-    assert res["phns"] == ("a", "b", "c", "d")
+    assert res["phns"] == ["a", "b", "c", "d"]
