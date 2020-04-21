@@ -21,7 +21,15 @@ for item in tqdm(data):
     _phns = phns.utils.timit_to_cmu(item["phns"])
     _phns = [phn for phn in _phns if phn != "sil"]
 
-    calculated_phns_variants = phns.from_text(item["text"], apply_heuristics=True)
+    try:
+        # if item['text'] == 'Princes and factions clashed in the open street and died on the open scaffold.\n':
+        #     import ipdb
+        #     ipdb.set_trace()
+        calculated_phns_variants = phns.from_text(item["text"], apply_heuristics=True)
+    except:
+        print(item)
+        raise
+
     if not calculated_phns_variants:
         continue
 

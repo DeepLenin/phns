@@ -40,7 +40,7 @@ def apply(pronunciations):
             replace_sequences = itertools.product(*modifications)
             new_pronunciations = []
 
-            for seq in replace_sequences:
+            for i, seq in enumerate(replace_sequences):
                 new_pronunciation = deepcopy(pronunciation)
                 seq = [step for step in seq if step]
                 seq.sort(key=lambda x: x[:2])
@@ -117,7 +117,7 @@ def find_modifications(pronunciation):
                (next_phn and next_phn.val) in ARPABET_CONSONANTS:
                 modifications.append([word_id, phn_id, "consonant_cluster", None])
 
-            if phn.val == 'ah' and not phn.stress:
+            if phn.val == 'ah' and not phn.stress and len(word) > 1:
                 modifications.append([word_id, phn_id, "unstressed_ah", None])
 
     return modifications

@@ -60,3 +60,8 @@ def test_unstressed_ah():
     canonical = deep_phn([["p", "ah0", "l", "iy1", "s"]])
     changed = deep_phn([["p", "l", "iy1", "s"]])
     assert apply([canonical]) == sorted([canonical, changed])
+
+def test_skips_word_ah():
+    canonical = deep_phn([["ah"], ["p", "ah0", "l", "iy1", "s"]])
+    changed = deep_phn([["ah"], ["p", "l", "iy1", "s"]])
+    assert apply([canonical]) == sorted([canonical, changed])
