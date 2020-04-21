@@ -2,6 +2,7 @@ import numpy as np
 import os
 from tqdm import tqdm
 import pickle
+from multiprocessing import Pool
 
 import sys
 sys.path.append('../phns')
@@ -15,8 +16,8 @@ with open(DATA_PATH + "timit_bench.pkl", "rb") as f:
     data = pickle.load(f)
 
 
-cers = []
-for item in tqdm(data):
+def process_item(item):
+    pbar.update()
     # Preprocessing data
     _phns = phns.utils.timit_to_cmu(item["phns"])
     _phns = [phn for phn in _phns if phn != "sil"]
@@ -31,10 +32,20 @@ for item in tqdm(data):
         raise
 
     if not calculated_phns_variants:
-        continue
+        return
 
     best = phns.closest(_phns, calculated_phns_variants)
-    cers.append(best["cer"])
+    return best["cer"]
+
+pbar = tqdm(total=int(len(data)/6))
+
+pool = Pool(6)
+cers = pool.map(process_item, data)
+cers = [cer for cer in cers if cer]
+
+#cers.append(best["cer"])
+#for item in tqdm(data):
+#    cers.append(process_item(item))
 
 # print(cers)
 print({
