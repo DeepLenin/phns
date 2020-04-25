@@ -1,5 +1,7 @@
+import itertools
+
 class Node:
-    def __init__(self, node_type):
+    def __init__(self, node_type=None):
         self.node_type = node_type
         self.out_edges = []
 
@@ -23,17 +25,85 @@ class Graph:
             # 3. Создаем начальную общую ветку
             # 4. Создаем все разные средние ветки
             # 5. Объединяем все ветки в одну, даже если это просто нода конца слова.
+
+            # if len(pronunciations[0]) == 2:
+            #     import ipdb
+            #     ipdb.set_trace()
+
+            i_diff_forward = __find_index_of_first_diff__(pronunciations)
+            reversed_pronunciations = [list(reversed(p)) for p in pronunciations]
+            i_diff_reverse = -__find_index_of_first_diff__(reversed_pronunciations)-1
+
+            if i_diff_forward == 0:
+                import ipdb
+                ipdb.set_trace()
+
+            for i in range(i_diff_forward):
+                self.last_node = self.add_phn(pronunciations[0][i])
+
+            prev_last_node = self.last_node
+            self.last_node = Node()
+            print(len(pronunciations), i_diff_forward, i_diff_reverse)
+            for pronunciation in pronunciations:
+                print(pronunciation[0:i_diff_forward], pronunciation[i_diff_forward:i_diff_reverse], pronunciation[i_diff_reverse:])
+            for pronunciation in pronunciations:
+                node = prev_last_node
+                for phn in pronunciation[i_diff_forward:i_diff_reverse-1]:
+                    node = self.add_phn(phn, node)
+                self.add_phn(pronunciation[i_diff_reverse], node, next_node=self.last_node)
+
+            for i in range(i_diff_reverse, 0):
+                self.last_node = self.add_phn(pronunciations[0][i])
         else:
-            pronunciation = pronunciations[0]
-            p_len = len(pronunciation)
-            for i in range(p_len):
-                if i == p_len - 1:
-                    next_node = Node("<WORD>")
-                else:
-                    next_node = Node("<PHN>")
+            for phn in pronunciations[0]:
+                self.last_node = self.add_phn(phn)
 
-                phn = pronunciation[i]
-                new_edge = Edge(phn, to_node=next_node)
+        self.last_node.node_type = "<WORD>"
 
-                self.last_node.out_edges.append(new_edge)
-                self.last_node = next_node
+
+    def add_phn(self, phn, node=None, next_node=None):
+        if not node:
+            node = self.last_node
+        if not next_node:
+            next_node = Node()
+        new_edge = Edge(phn, to_node=next_node)
+        node.out_edges.append(new_edge)
+        return next_node
+
+
+    def __iter__(self):
+        nodes = [self.root]
+        visited = set(nodes)
+        while nodes:
+            new_nodes = []
+            for node in nodes:
+                yield node
+                visit_nodes = set(edge.to_node for edge in node.out_edges if edge.to_node not in visited)
+                visited.update(visit_nodes)
+                new_nodes.extend(visit_nodes)
+            nodes = new_nodes 
+
+
+    def to_graphviz(self):
+        import graphviz
+
+        dot = graphviz.Digraph()
+        for node in self:
+            dot.node(str(id(node)), node.node_type or '')
+
+        for node in self:
+            for edge in node.out_edges:
+                dot.edge(str(id(node)), str(id(edge.to_node)), label=edge.value.val)
+        return dot
+    
+
+
+def __find_index_of_first_diff__(seqs):
+    i = 0
+    cardinality = len(seqs)
+
+    for i_items in itertools.zip_longest(*seqs):
+        if i_items.count(i_items[0]) == cardinality:
+            i += 1
+        else:
+            return i
