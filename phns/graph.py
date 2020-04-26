@@ -2,7 +2,7 @@ import itertools
 
 class Node:
     def __init__(self, node_type=None):
-        self.node_type = node_type
+        self.type = node_type
         self.out_edges = []
 
 class Edge:
@@ -34,18 +34,20 @@ class Graph:
             reversed_pronunciations = [list(reversed(p)) for p in pronunciations]
             i_diff_reverse = -__find_index_of_first_diff__(reversed_pronunciations)-1
 
-            if i_diff_forward == 0:
-                import ipdb
-                ipdb.set_trace()
+            #if i_diff_forward == 0:
+            #    import ipdb
+            #    ipdb.set_trace()
 
             for i in range(i_diff_forward):
                 self.last_node = self.add_phn(pronunciations[0][i])
 
             prev_last_node = self.last_node
             self.last_node = Node()
-            print(len(pronunciations), i_diff_forward, i_diff_reverse)
-            for pronunciation in pronunciations:
-                print(pronunciation[0:i_diff_forward], pronunciation[i_diff_forward:i_diff_reverse], pronunciation[i_diff_reverse:])
+
+            #print(len(pronunciations), i_diff_forward, i_diff_reverse)
+            #for pronunciation in pronunciations:
+            #    print(pronunciation[0:i_diff_forward], pronunciation[i_diff_forward:i_diff_reverse], pronunciation[i_diff_reverse:])
+
             for pronunciation in pronunciations:
                 node = prev_last_node
                 for phn in pronunciation[i_diff_forward:i_diff_reverse-1]:
@@ -58,7 +60,7 @@ class Graph:
             for phn in pronunciations[0]:
                 self.last_node = self.add_phn(phn)
 
-        self.last_node.node_type = "<WORD>"
+        self.last_node.type = "<WORD>"
 
 
     def add_phn(self, phn, node=None, next_node=None):
@@ -81,7 +83,7 @@ class Graph:
                 visit_nodes = set(edge.to_node for edge in node.out_edges if edge.to_node not in visited)
                 visited.update(visit_nodes)
                 new_nodes.extend(visit_nodes)
-            nodes = new_nodes 
+            nodes = new_nodes
 
 
     def to_graphviz(self):
@@ -89,13 +91,12 @@ class Graph:
 
         dot = graphviz.Digraph()
         for node in self:
-            dot.node(str(id(node)), node.node_type or '')
+            dot.node(str(id(node)), node.type or '')
 
         for node in self:
             for edge in node.out_edges:
                 dot.edge(str(id(node)), str(id(edge.to_node)), label=edge.value.val)
         return dot
-    
 
 
 def __find_index_of_first_diff__(seqs):
