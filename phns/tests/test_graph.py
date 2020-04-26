@@ -33,19 +33,50 @@ def test_attach_single():
 def test_attach_multi():
     graph = Graph()
     pronunciations = [list("hello"), list("halo")]
-
     graph.attach(pronunciations)
+    assert sorted(graph.to_list()) == sorted(pronunciations)
 
-    # h -> e ->
-    for node in graph:
-        for edge in node.out_edges:
-            if edge.value == "h":
-                next_edges = edge.to_node.out_edges
-                [ne.value for ne in next_edges]
 
-    edge_values = [node.out_edges[0].value for node in graph if node.out_edges]
-    assert edge_values == ["h", "e", "y"]
-    assert graph.last_node.type == "<WORD>"
+def test_attach_multi_different_ending():
+    graph = Graph()
+    pronunciations = [list("hi"), list("ho")]
+    graph.attach(pronunciations)
+    assert sorted(graph.to_list()) == sorted(pronunciations)
+
+
+def test_attach_multi_three():
+    graph = Graph()
+    pronunciations = [list("hi"), list("ho"), list("hu")]
+    graph.attach(pronunciations)
+    assert sorted(graph.to_list()) == sorted(pronunciations)
+
+
+def test_attach_multi_different_beginning():
+    graph = Graph()
+    pronunciations = [list("am"), list("om")]
+    graph.attach(pronunciations)
+    assert sorted(graph.to_list()) == sorted(pronunciations)
+
+
+def test_attach_multi_different_beginning_and_length():
+    graph = Graph()
+    pronunciations = [list("wat"), list("hwat")]
+    graph.attach(pronunciations)
+    assert sorted(graph.to_list()) == sorted(pronunciations)
+
+
+def test_attach_multi_omission():
+    graph = Graph()
+    pronunciations = [list("what"), list("wat")]
+    graph.attach(pronunciations)
+    assert sorted(graph.to_list()) == sorted(pronunciations)
+
+
+def test_attach_multi_different_beginning_and_ending():
+    graph = Graph()
+    pronunciations = [list("am"), list("ofi")]
+    graph.attach(pronunciations)
+    assert sorted(graph.to_list()) == sorted(pronunciations)
 
 
 def test_find_index_of_first_diff():

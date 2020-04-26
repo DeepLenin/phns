@@ -34,27 +34,26 @@ class Graph:
             reversed_pronunciations = [list(reversed(p)) for p in pronunciations]
             i_diff_reverse = -__find_index_of_first_diff__(reversed_pronunciations)-1
 
-            #if i_diff_forward == 0:
-            #    import ipdb
-            #    ipdb.set_trace()
-
             for i in range(i_diff_forward):
                 self.last_node = self.add_phn(pronunciations[0][i])
 
             prev_last_node = self.last_node
             self.last_node = Node()
 
-            #print(len(pronunciations), i_diff_forward, i_diff_reverse)
-            #for pronunciation in pronunciations:
-            #    print(pronunciation[0:i_diff_forward], pronunciation[i_diff_forward:i_diff_reverse], pronunciation[i_diff_reverse:])
-
             for pronunciation in pronunciations:
                 node = prev_last_node
-                for phn in pronunciation[i_diff_forward:i_diff_reverse-1]:
+                for phn in pronunciation[i_diff_forward:i_diff_reverse]:
                     node = self.add_phn(phn, node)
-                self.add_phn(pronunciation[i_diff_reverse], node, next_node=self.last_node)
 
-            for i in range(i_diff_reverse, 0):
+                if len(pronunciation) - i_diff_forward >= -i_diff_reverse:
+                    phn = pronunciation[i_diff_reverse]
+                else:
+                    phn = None
+
+                self.add_phn(phn, node, next_node=self.last_node)
+
+
+            for i in range(i_diff_reverse+1, 0):
                 self.last_node = self.add_phn(pronunciations[0][i])
         else:
             for phn in pronunciations[0]:
@@ -95,8 +94,22 @@ class Graph:
 
         for node in self:
             for edge in node.out_edges:
-                dot.edge(str(id(node)), str(id(edge.to_node)), label=edge.value.val)
+                dot.edge(str(id(node)), str(id(edge.to_node)), label=str(edge.value))
         return dot
+
+
+    def to_list(self):
+        return self.__traverse__(self.root, [])
+
+    def __traverse__(self, node, prefix):
+        result = []
+        for edge in node.out_edges:
+            new_prefix = prefix.copy()
+            if edge.value:
+                new_prefix.append(edge.value)
+            result.extend(self.__traverse__(edge.to_node, new_prefix))
+        return result or [prefix]
+
 
 
 def __find_index_of_first_diff__(seqs):
