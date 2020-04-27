@@ -1,4 +1,5 @@
 from phns.graph import Graph, __find_index_of_first_diff__
+from phns.utils import deep_str
 
 
 def test_graph_init():
@@ -13,7 +14,7 @@ def test_graph_init():
 def test_graph_add_phn_to_root():
     graph = Graph()
     phn = "a"
-    next_node = graph.add_phn(phn)
+    next_node = graph.__add_phn__(phn)
 
     assert list(iter(graph)) == [graph.root, next_node]
     assert graph.root.out_edges[0].value == phn
@@ -22,7 +23,6 @@ def test_graph_add_phn_to_root():
 def test_attach_single():
     graph = Graph()
     pronunciations = [list("hey")]
-
     graph.attach(pronunciations)
 
     edge_values = [node.out_edges[0].value for node in graph if node.out_edges]
@@ -111,3 +111,26 @@ def test_find_index_of_first_diff_on_multiple():
 
     found = __find_index_of_first_diff__([str_a, str_b, str_c, str_d])
     assert found == 2
+
+
+def test_edges():
+    graph = Graph()
+    pronunciations = [list("hello"), list("halo")]
+    graph.attach(pronunciations)
+    assert sorted([edge.value for edge in graph.edges()]) == sorted(list("helloa"))
+
+
+def test_triples():
+    graph = Graph()
+    pronunciations = [list("hello"), list("halo")]
+    graph.attach(pronunciations)
+    strings = ["".join([edge.value for edge in triple if edge]) for triple in graph.triples()]
+    assert sorted(strings) == sorted(["he", "ha", "hel", "hal", "ell", "llo", "alo", "lo"])
+
+
+def test_triples_empty_edges():
+    graph = Graph()
+    pronunciations = [list("wat"), list("what")]
+    graph.attach(pronunciations)
+    strings = ["".join([edge.value for edge in triple if edge]) for triple in graph.triples()]
+    assert sorted(strings) == sorted(['wa', 'wh', 'wha', 'wat', 'hat', 'at'])

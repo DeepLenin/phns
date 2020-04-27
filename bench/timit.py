@@ -25,16 +25,16 @@ for item in tqdm(data):
         # if item['text'] == 'Princes and factions clashed in the open street and died on the open scaffold.\n':
         #     import ipdb
         #     ipdb.set_trace()
-        calculated_phns_variants = phns.from_text(item["text"], apply_heuristics=True)
+        calculated_phns_variants = phns.from_text(item["text"], apply_heuristics=False)
     except:
         print(item)
         raise
 
-    if not calculated_phns_variants:
-        continue
+    # if not calculated_phns_variants:
+    #     continue
 
-    best = phns.closest(_phns, calculated_phns_variants)
-    cers.append(best["cer"])
+    # best = phns.closest(_phns, calculated_phns_variants)
+    # cers.append(best["cer"])
 
 # print(cers)
 print({
