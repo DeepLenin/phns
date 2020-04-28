@@ -32,10 +32,6 @@ class Graph:
             # 4. Создаем все разные средние ветки
             # 5. Объединяем все ветки в одну, даже если это просто нода конца слова.
 
-            # if len(pronunciations[0]) == 2:
-            #     import ipdb
-            #     ipdb.set_trace()
-
             i_diff_forward = __find_index_of_first_diff__(pronunciations)
             reversed_pronunciations = [list(reversed(p)) for p in pronunciations]
             i_diff_reverse = -__find_index_of_first_diff__(reversed_pronunciations)-1
@@ -146,6 +142,28 @@ class Graph:
                 result.extend(self.__fetch_edges__(edge, direction))
         return result
 
+
+    @staticmethod
+    def create_edges(from_node, to_node, first_phn, second_phn=None):
+        if first_phn == second_phn:
+            second_phn = None
+
+        for edge in from_node.out_edges:
+            if edge.value == first_phn:
+                if not second_phn:
+                    if edge.to_node == to_node:
+                        return
+                else:
+                    for next_edge in edge.to_node.out_edges:
+                        if next_edge.value == second_phn and next_edge.to_node == to_node:
+                            return
+
+        if second_phn:
+            new_node = Node()
+            Edge(first_phn, from_node, new_node)
+            Edge(second_phn, new_node, to_node)
+        else:
+            Edge(first_phn, from_node, to_node)
 
 
 

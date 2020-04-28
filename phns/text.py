@@ -20,7 +20,6 @@ def __split__(text):
         .split()
 
 
-# TODO: add tests for missing_handler
 def from_text(text, missing_handler=lambda _: False, apply_heuristics=True):
     words = __split__(text)
 
