@@ -1,16 +1,29 @@
 from phns.heuristics import apply
-from phns.utils import deep_phn
+from phns.utils import deep_phn, flatten
+from phns.graph import Graph
 
+
+# def helper(canonical, changed)
 
 def test_assimilate_without_changes():
+    graph = Graph()
     canonical = deep_phn([["dh", "ah1"], ["b", "oy"]])  # the boy
-    assert apply([canonical]) == [canonical]
+    for word in canonical:
+        graph.attach([word])
+    apply(graph)
+    assert sorted(graph.to_list()) == [flatten(canonical)]
 
 
 def test_assimilate_with_one_change():
     canonical = deep_phn([["f", "ae", "t"], ["b", "oy"]])  # fat boy
     changed = deep_phn([["f", "ae", "p"], ["b", "oy"]])
-    assert apply([canonical]) == sorted([canonical, changed])
+
+    graph = Graph()
+    for word in canonical:
+        graph.attach([word])
+    apply(graph)
+    # graph.to_graphviz().view()
+    assert sorted(graph.to_list()) == sorted([flatten(canonical), flatten(changed)])
 
 
 def test_assimilate_with_two_changes():

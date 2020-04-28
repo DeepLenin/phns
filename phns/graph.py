@@ -63,6 +63,8 @@ class Graph:
 
         self.last_node.type = "<WORD>"
 
+        return self
+
 
     def __add_phn__(self, phn, node=None, next_node=None):
         if not node:
@@ -85,7 +87,7 @@ class Graph:
                 new_nodes.extend(visit_nodes)
             nodes = new_nodes
 
-    
+
     def edges(self):
         for node in self:
             for edge in node.out_edges:
