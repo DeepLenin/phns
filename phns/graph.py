@@ -108,7 +108,9 @@ class Graph:
 
 
     def to_list(self):
-        return self.__traverse__(self.root, [])
+        result = []
+        [result.append(it) for it in self.__traverse__(self.root, []) if it not in result]
+        return result
 
 
     def __traverse__(self, node, prefix):
@@ -122,13 +124,40 @@ class Graph:
 
 
     def triples(self):
+        result = []
         for edge in self.edges():
             if not edge.value:
                 continue
-            in_edges = self.__fetch_edges__(edge, "in") or [None]
-            out_edges = self.__fetch_edges__(edge, "out") or [None]
-            for triple in itertools.product(in_edges, [edge], out_edges):
-                yield list(triple)
+            result += self.__fetch_triples__(edge)
+        return result
+
+
+    def __fetch_triples__(self, edge, in_edge=None, out_edge=None):
+        if in_edge and in_edge.value:
+            in_edges = [in_edge]
+        else:
+            in_edges = self.__fetch_edges__(in_edge or edge, "in") or [None]
+
+        if out_edge and out_edge.value:
+            out_edges = [out_edge]
+        else:
+            out_edges = self.__fetch_edges__(out_edge or edge, "out") or [None]
+
+        return [list(triple) for triple in itertools.product(in_edges, [edge], out_edges)]
+    
+
+    def __fetch_new_triples__(self, new_edge, in_edge=True, out_edge=True):
+        result = []
+        if new_edge.value:
+            result += self.__fetch_triples__(new_edge)
+
+        if out_edge:
+            [result.extend(self.__fetch_triples__(out_edge, in_edge=new_edge)) for out_edge in new_edge.to_node.out_edges]
+
+        if in_edge:
+            [result.extend(self.__fetch_triples__(in_edge, out_edge=new_edge)) for in_edge in new_edge.from_node.in_edges]
+
+        return result
 
 
     def __fetch_edges__(self, edge, direction):
@@ -145,8 +174,7 @@ class Graph:
         return result
 
 
-    @staticmethod
-    def create_edges(from_node, to_node, first_phn, second_phn=None):
+    def create_edges(self, from_node, to_node, first_phn, second_phn=None):
         if first_phn == second_phn:
             second_phn = None
 
@@ -154,18 +182,20 @@ class Graph:
             if edge.value == first_phn:
                 if not second_phn:
                     if edge.to_node == to_node:
-                        return
+                        return []
                 else:
                     for next_edge in edge.to_node.out_edges:
                         if next_edge.value == second_phn and next_edge.to_node == to_node:
-                            return
+                            return []
 
         if second_phn:
             new_node = Node()
-            Edge(first_phn, from_node, new_node)
-            Edge(second_phn, new_node, to_node)
+            edge1 = Edge(first_phn, from_node, new_node)
+            edge2 = Edge(second_phn, new_node, to_node)
+            return self.__fetch_new_triples__(edge1, out_edge=False) + self.__fetch_new_triples__(edge2, in_edge=False)
         else:
-            Edge(first_phn, from_node, to_node)
+            edge = Edge(first_phn, from_node, to_node)
+            return self.__fetch_new_triples__(edge)
 
 
 

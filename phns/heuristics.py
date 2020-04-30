@@ -27,23 +27,28 @@ RULES = {
 
 def apply(graph):
     triples = list(graph.triples())
-    for (before,current,after) in triples:
 
-        if after:
-            phn = RULES["assimilate_last"].get((current.value, after.value))
-            if phn:
-                graph.create_edges(current.from_node, after.to_node, phn, after.value)
+    while triples:
+        new_triples = []
+        for (before,current,after) in triples:
 
-            phn = RULES["assimilate_coalescence"].get((current.value, after.value))
-            if phn:
-                graph.create_edges(current.from_node, after.to_node, phn)
+            if after:
+                phn = RULES["assimilate_last"].get((current.value, after.value))
+                if phn:
+                    new_triples += graph.create_edges(current.from_node, after.to_node, phn, after.value)
 
-        if current.value == Phn("ah") and not current.value.stress:
-            graph.create_edges(current.from_node, current.to_node, None)
+                phn = RULES["assimilate_coalescence"].get((current.value, after.value))
+                if phn:
+                    new_triples += graph.create_edges(current.from_node, after.to_node, phn)
 
-        if current.value.val in {"t", "d"} and before and after and \
-           before.value.val in ARPABET_CONSONANTS and \
-           after.value.val in ARPABET_CONSONANTS:
-            graph.create_edges(before.from_node, after.to_node, before.value, after.value)
+            if current.value == Phn("ah") and not current.value.stress:
+                new_triples += graph.create_edges(current.from_node, current.to_node, None)
+
+            if current.value.val in {"t", "d"} and before and after and \
+               before.value.val in ARPABET_CONSONANTS and \
+               after.value.val in ARPABET_CONSONANTS:
+                new_triples += graph.create_edges(before.from_node, after.to_node, before.value, after.value)
+
+        triples = new_triples
 
     return graph

@@ -3,78 +3,80 @@ from phns.utils import deep_phn, flatten
 from phns.graph import Graph
 
 
-# def helper(canonical, changed)
-
-def test_assimilate_without_changes():
+def create_graph_and_check(canonical, *changed):
     graph = Graph()
-    canonical = deep_phn([["dh", "ah1"], ["b", "oy"]])  # the boy
+    canonical = deep_phn(canonical)
+    changed = [deep_phn(it) for it in changed]
     for word in canonical:
         graph.attach([word])
     apply(graph)
-    assert sorted(graph.to_list()) == [flatten(canonical)]
+    assert sorted(graph.to_list()) == sorted([flatten(canonical), *[flatten(it) for it in changed]])
+
+
+
+def test_assimilate_without_changes():
+    canonical = [["dh", "ah1"], ["b", "oy"]]  # the boy
+    create_graph_and_check(canonical)
 
 
 def test_assimilate_with_one_change():
-    canonical = deep_phn([["f", "ae", "t"], ["b", "oy"]])  # fat boy
-    changed = deep_phn([["f", "ae", "p"], ["b", "oy"]])
-
-    graph = Graph()
-    for word in canonical:
-        graph.attach([word])
-    apply(graph)
-    # graph.to_graphviz().view()
-    assert sorted(graph.to_list()) == sorted([flatten(canonical), flatten(changed)])
+    canonical = [["f", "ae", "t"], ["b", "oy"]]  # fat boy
+    changed = [["f", "ae", "p"], ["b", "oy"]]
+    create_graph_and_check(canonical, changed)
 
 
 def test_assimilate_with_two_changes():
-    canonical = deep_phn([["f", "ae", "t"], ["b", "oy"], ["g", "uh", "d"], ["b", "oy"]])  # fat boy good boy
-    changed1 = deep_phn([["f", "ae", "t"], ["b", "oy"], ["g", "uh", "b"], ["b", "oy"]])
-    changed2 = deep_phn([["f", "ae", "p"], ["b", "oy"], ["g", "uh", "d"], ["b", "oy"]])
-    changed3 = deep_phn([["f", "ae", "p"], ["b", "oy"], ["g", "uh", "b"], ["b", "oy"]])
-
-    assert apply([canonical]) == sorted([canonical, changed1, changed2, changed3])
+    canonical = [["f", "ae", "t"], ["b", "oy"], ["g", "uh", "d"], ["b", "oy"]]  # fat boy good boy
+    changed1 = [["f", "ae", "t"], ["b", "oy"], ["g", "uh"], ["b", "oy"]]
+    changed2 = [["f", "ae", "p"], ["b", "oy"], ["g", "uh", "d"], ["b", "oy"]]
+    changed3 = [["f", "ae", "p"], ["b", "oy"], ["g", "uh"], ["b", "oy"]]
+    create_graph_and_check(canonical, changed1, changed2, changed3)
 
 
 def test_assimilate_coalescence():
-    canonical = deep_phn([["g", "uh", "d"], ["y", "ih", "r"]])
-    changed   = deep_phn([["g", "uh"], ["jh", "ih", "r"]])
-    assert apply([canonical]) == sorted([canonical, changed])
+    canonical = [["g", "uh", "d"], ["y", "ih", "r"]]
+    changed   = [["g", "uh"], ["jh", "ih", "r"]]
+    create_graph_and_check(canonical, changed)
 
 
 def test_consonant_cluster():
-    canonical = deep_phn([["f", "ae", "k", "t", "s"], ["t", "r", "uh"]])
-    changed1 = deep_phn([["f", "ae", "k", "s"], ["t", "r", "uh"]])
-    changed2 = deep_phn([["f", "ae", "k", "t", "s"], ["r", "uh"]])
-    changed3 = deep_phn([["f", "ae", "k", "s"], ["r", "uh"]])
-    assert apply([canonical]) == sorted([canonical, changed1, changed2, changed3])
+    canonical = [["f", "ae", "k", "t", "s"], ["t", "r", "uh"]]
+    changed1 = [["f", "ae", "k", "s"], ["t", "r", "uh"]]
+    changed2 = [["f", "ae", "k", "t", "s"], ["r", "uh"]]
+    changed3 = [["f", "ae", "k", "s"], ["r", "uh"]]
+    create_graph_and_check(canonical, changed1, changed2, changed3)
 
 
 def test_seq_order():
-    canonical = deep_phn([["f", "ae", "k", "t"], ["b", "ae", "d"]])
-    changed1 = deep_phn([["f", "ae", "k", "p"], ["b", "ae", "d"]])
-    changed2 = deep_phn([["f", "ae", "k"], ["b", "ae", "d"]])
-    assert apply([canonical]) == sorted([canonical, changed1, changed2])
+    canonical = [["f", "ae", "k", "t"], ["b", "ae", "d"]]
+    changed1 = [["f", "ae", "k", "p"], ["b", "ae", "d"]]
+    changed2 = [["f", "ae", "k"], ["b", "ae", "d"]]
+    create_graph_and_check(canonical, changed1, changed2)
 
 
 def test_seq_order_2():
-    canonical = deep_phn([["f", "ae", "k", "t", "ch", "ae", "t"], ["b", "ae", "d"]])
-    changed1 = deep_phn([["f", "ae", "k", "ch", "ae", "t"], ["b", "ae", "d"]])
-    changed2 = deep_phn([["f", "ae", "k", "t", "ch", "ae", "p"], ["b", "ae", "d"]])
-    changed3 = deep_phn([["f", "ae", "k", "ch", "ae", "p"], ["b", "ae", "d"]])
-    assert apply([canonical]) == sorted([canonical, changed1, changed2, changed3])
+    canonical = [["f", "ae", "k", "t", "ch", "ae", "t"], ["b", "ae", "d"]]
+    changed1 = [["f", "ae", "k", "ch", "ae", "t"], ["b", "ae", "d"]]
+    changed2 = [["f", "ae", "k", "t", "ch", "ae", "p"], ["b", "ae", "d"]]
+    changed3 = [["f", "ae", "k", "ch", "ae", "p"], ["b", "ae", "d"]]
+    create_graph_and_check(canonical, changed1, changed2, changed3)
 
 
 def test_consonant_cluster_doubles():
-    canonical = deep_phn([["t", "eh", "k", "s", "t", "s"]])
-    changed = deep_phn([["t", "eh", "k", "s"]])
-    assert apply([canonical]) == sorted([canonical, changed])
+    canonical = [["t", "eh", "k", "s", "t", "s"]]
+    changed = [["t", "eh", "k", "s"]]
+    create_graph_and_check(canonical, changed)
+
 
 def test_unstressed_ah():
-    canonical = deep_phn([["p", "ah0", "l", "iy1", "s"]])
-    changed = deep_phn([["p", "l", "iy1", "s"]])
-    assert apply([canonical]) == sorted([canonical, changed])
+    canonical = [["p", "ah0", "l", "iy1", "s"]]
+    changed = [["p", "l", "iy1", "s"]]
+    create_graph_and_check(canonical, changed)
+
 
 def test_skips_word_ah():
-    canonical = deep_phn([["ah"], ["p", "ah0", "l", "iy1", "s"]])
-    changed = deep_phn([["ah"], ["p", "l", "iy1", "s"]])
-    assert apply([canonical]) == sorted([canonical, changed])
+    canonical = [["ah"], ["p", "ah0", "l", "iy1", "s"]]
+    changed1 = [["ah"], ["p", "l", "iy1", "s"]]
+    changed2 = [["p", "l", "iy1", "s"]]
+    changed3 = [["p", "ah0", "l", "iy1", "s"]]
+    create_graph_and_check(canonical, changed1, changed2, changed3)
