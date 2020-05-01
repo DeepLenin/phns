@@ -27,6 +27,9 @@ for item in tqdm(data):
         #     ipdb.set_trace()
         calculated_phns_variants = phns.from_text(item["text"], apply_heuristics=True)
     except:
+        import ipdb
+        ipdb.set_trace()
+        calculated_phns_variants = phns.from_text(item["text"], apply_heuristics=True)
         print(item)
         raise
 

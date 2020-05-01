@@ -133,17 +133,34 @@ class Graph:
 
 
     def __fetch_triples__(self, edge, in_edge=None, out_edge=None):
-        if in_edge and in_edge.value:
-            in_edges = [in_edge]
-        else:
-            in_edges = self.__fetch_edges__(in_edge or edge, "in") or [None]
+        if not edge.value:
+            result = []
+            if in_edge:
+                for next_edge in edge.to_node.out_edges:
+                    result += self.__fetch_triples__(next_edge, in_edge=in_edge)
 
-        if out_edge and out_edge.value:
-            out_edges = [out_edge]
-        else:
-            out_edges = self.__fetch_edges__(out_edge or edge, "out") or [None]
+            elif out_edge:
+                for next_edge in edge.from_node.in_edges:
+                    result += self.__fetch_triples__(next_edge, out_edge=out_edge)
 
-        return [list(triple) for triple in itertools.product(in_edges, [edge], out_edges)]
+            else:
+                raise
+            
+            return result
+
+        else:
+
+            if in_edge and in_edge.value:
+                in_edges = [in_edge]
+            else:
+                in_edges = self.__fetch_edges__(in_edge or edge, "in") or [None]
+
+            if out_edge and out_edge.value:
+                out_edges = [out_edge]
+            else:
+                out_edges = self.__fetch_edges__(out_edge or edge, "out") or [None]
+
+            return [list(triple) for triple in itertools.product(in_edges, [edge], out_edges)]
     
 
     def __fetch_new_triples__(self, new_edge, in_edge=True, out_edge=True):
@@ -152,10 +169,12 @@ class Graph:
             result += self.__fetch_triples__(new_edge)
 
         if out_edge:
-            [result.extend(self.__fetch_triples__(out_edge, in_edge=new_edge)) for out_edge in new_edge.to_node.out_edges]
+            for out_edge in new_edge.to_node.out_edges:
+                result += self.__fetch_triples__(out_edge, in_edge=new_edge)
 
         if in_edge:
-            [result.extend(self.__fetch_triples__(in_edge, out_edge=new_edge)) for in_edge in new_edge.from_node.in_edges]
+            for in_edge in new_edge.from_node.in_edges:
+                result += self.__fetch_triples__(in_edge, out_edge=new_edge)
 
         return result
 

@@ -80,3 +80,8 @@ def test_skips_word_ah():
     changed2 = [["p", "l", "iy1", "s"]]
     changed3 = [["p", "ah0", "l", "iy1", "s"]]
     create_graph_and_check(canonical, changed1, changed2, changed3)
+
+
+def test_new_triples_with_neighboring_none():
+    canonical = [["ah", "n", "t", "y"]]
+    create_graph_and_check(canonical)
