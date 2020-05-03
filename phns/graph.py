@@ -1,25 +1,36 @@
 import itertools
 
 class Node:
-    def __init__(self, node_type=None):
-        self.type = node_type
+    def __init__(self, value):
         self.in_edges = []
         self.out_edges = []
+        self.value = value
+
+    def __repr__(self):
+        return f"Node(\"{self.value}\")"
+
+    def in_nodes(self):
+        return [edge.from_node for edge in self.in_edges]
+
+    def out_nodes(self):
+        return [edge.to_node for edge in self.out_edges]
 
 
 class Edge:
-    def __init__(self, value, from_node, to_node):
-        self.value = value
+    def __init__(self, from_node, to_node):
         self.from_node = from_node
         self.to_node = to_node
         from_node.out_edges.append(self)
         to_node.in_edges.append(self)
 
+    def __repr__(self):
+        return f"Edge({self.from_node}->{self.to_node})"
+
 
 class Graph:
     def __init__(self):
-        self.root = Node("<ROOT>")
-        self.last_node = self.root
+        self.roots = []
+        self.tails = []
 
     def calculate_distances(self):
         self.distances = {}
@@ -53,46 +64,53 @@ class Graph:
             i_diff_reverse = -__find_index_of_first_diff__(reversed_pronunciations)-1
 
             for i in range(i_diff_forward):
-                self.last_node = self.__add_phn__(pronunciations[0][i])
+                self.tails = [self.__add_phn__(pronunciations[0][i])]
 
-            prev_last_node = self.last_node
-            self.last_node = Node()
+            new_tails = []
+
+            if not self.roots and not i_diff_forward:
+                least_len = min([len(pronunciation) for pronunciation in pronunciations])
+                if least_len - i_diff_forward < -i_diff_reverse:
+                    i_diff_reverse += 1
 
             for pronunciation in pronunciations:
-                node = prev_last_node
+                prev_nodes = self.tails
+
                 for phn in pronunciation[i_diff_forward:i_diff_reverse]:
-                    node = self.__add_phn__(phn, node)
+                    node = self.__add_phn__(phn, prev_nodes)
+                    prev_nodes = [node]
 
                 if len(pronunciation) - i_diff_forward >= -i_diff_reverse:
                     phn = pronunciation[i_diff_reverse]
-                else:
-                    phn = None
+                    node = self.__add_phn__(phn, prev_nodes)
+                    prev_nodes = [node]
 
-                self.__add_phn__(phn, node, next_node=self.last_node)
+                new_tails.extend(prev_nodes)
 
+            self.tails = new_tails
 
             for i in range(i_diff_reverse+1, 0):
-                self.last_node = self.__add_phn__(pronunciations[0][i])
+                self.tails = [self.__add_phn__(pronunciations[0][i])]
         else:
             for phn in pronunciations[0]:
-                self.last_node = self.__add_phn__(phn)
-
-        self.last_node.type = "<WORD>"
+                self.tails = [self.__add_phn__(phn)]
 
         return self
 
 
-    def __add_phn__(self, phn, node=None, next_node=None):
-        if not node:
-            node = self.last_node
-        if not next_node:
-            next_node = Node()
-        Edge(phn, from_node=node, to_node=next_node)
-        return next_node
+    def __add_phn__(self, phn, prev_nodes=None):
+        node = Node(phn)
+        if not self.tails and not prev_nodes:
+            self.roots.append(node)
+        if prev_nodes is None:
+            prev_nodes = self.tails
+        for prev_node in prev_nodes:
+            Edge(from_node=prev_node, to_node=node)
+        return node
 
 
     def __iter__(self):
-        nodes = [self.root]
+        nodes = self.roots
         visited = set(nodes)
         while nodes:
             new_nodes = []
@@ -104,22 +122,16 @@ class Graph:
             nodes = new_nodes
 
 
-    def edges(self):
-        for node in self:
-            for edge in node.out_edges:
-                yield edge
-
-
     def to_graphviz(self):
         import graphviz
 
         dot = graphviz.Digraph()
         for node in self:
-            dot.node(str(id(node)), node.type or "")
+            dot.node(str(id(node)), str(node.value))
 
         for node in self:
             for edge in node.out_edges:
-                dot.edge(str(id(node)), str(id(edge.to_node)), label=str(edge.value))
+                dot.edge(str(id(node)), str(id(edge.to_node)))
         return dot
 
 
@@ -129,54 +141,25 @@ class Graph:
         return result
 
 
+    # TODO: Fix
     def __traverse__(self, node, prefix):
         result = []
-        for edge in node.out_edges:
+        for next_node in node.out_nodes:
             new_prefix = prefix.copy()
-            if edge.value:
-                new_prefix.append(edge.value)
-            result.extend(self.__traverse__(edge.to_node, new_prefix))
+            new_prefix.append(node.value)
+            result.extend(self.__traverse__(next_node, new_prefix))
         return result or [prefix]
 
 
     def triples(self):
         result = []
-        for edge in self.edges():
-            if not edge.value:
-                continue
-            result += self.__fetch_triples__(edge)
+        for node in self:
+            result += self.__fetch_triples__(node)
         return result
 
 
-    def __fetch_triples__(self, edge, in_edge=None, out_edge=None):
-        if not edge.value:
-            result = []
-            if in_edge:
-                for next_edge in edge.to_node.out_edges:
-                    result += self.__fetch_triples__(next_edge, in_edge=in_edge)
-
-            elif out_edge:
-                for next_edge in edge.from_node.in_edges:
-                    result += self.__fetch_triples__(next_edge, out_edge=out_edge)
-
-            else:
-                raise
-
-            return result
-
-        else:
-
-            if in_edge and in_edge.value:
-                in_edges = [in_edge]
-            else:
-                in_edges = self.__fetch_edges__(in_edge or edge, "in") or [None]
-
-            if out_edge and out_edge.value:
-                out_edges = [out_edge]
-            else:
-                out_edges = self.__fetch_edges__(out_edge or edge, "out") or [None]
-
-            return [list(triple) for triple in itertools.product(in_edges, [edge], out_edges)]
+    def __fetch_triples__(self, node):
+        return itertools.product(node.in_nodes or [None], [node], node.out_nodes or [None])
 
 
     def __fetch_new_triples__(self, new_edge, in_edge=True, out_edge=True):
@@ -192,20 +175,6 @@ class Graph:
             for in_edge in new_edge.from_node.in_edges:
                 result += self.__fetch_triples__(in_edge, out_edge=new_edge)
 
-        return result
-
-
-    def __fetch_edges__(self, edge, direction):
-        node_type = direction == "in" and "from_node" or "to_node"
-        node = getattr(edge, node_type)
-        edges = getattr(node, direction + "_edges")
-
-        result = []
-        for edge in edges:
-            if edge.value:
-                result.append(edge)
-            else:
-                result.extend(self.__fetch_edges__(edge, direction))
         return result
 
 
