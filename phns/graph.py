@@ -21,6 +21,22 @@ class Graph:
         self.root = Node("<ROOT>")
         self.last_node = self.root
 
+    def calculate_distances(self):
+        self.distances = {}
+        self.__distance__([self.root])
+
+    def __distance__(self, prev_nodes):
+        node = prev_nodes[-1]
+        for edge in node.out_edges:
+            next_node = edge.to_node
+
+            for distance, prev_node in enumerate(reversed(prev_nodes)):
+                self.distances[(prev_node, next_node)] = min(self.distances.get((prev_node, next_node), float("inf")), distance + 1)
+
+            prev_nodes.append(next_node)
+            self.__distance__(prev_nodes)
+            prev_nodes.pop()
+
     def attach(self, pronunciations):
         if len(pronunciations) > 1:
             # h e l l o
@@ -145,7 +161,7 @@ class Graph:
 
             else:
                 raise
-            
+
             return result
 
         else:
@@ -161,7 +177,7 @@ class Graph:
                 out_edges = self.__fetch_edges__(out_edge or edge, "out") or [None]
 
             return [list(triple) for triple in itertools.product(in_edges, [edge], out_edges)]
-    
+
 
     def __fetch_new_triples__(self, new_edge, in_edge=True, out_edge=True):
         result = []

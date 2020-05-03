@@ -134,3 +134,17 @@ def test_triples_empty_edges():
     graph.attach(pronunciations)
     strings = ["".join([edge.value for edge in triple if edge]) for triple in graph.triples()]
     assert sorted(strings) == sorted(['wa', 'wh', 'wha', 'wat', 'hat', 'at'])
+
+
+def test_calculate_distances():
+    graph = Graph()
+    pronunciations = [list("wat"), list("what")]
+    graph.attach(pronunciations)
+    graph.calculate_distances()
+    graph.to_graphviz().view()
+    for (node1, node2), distance in graph.distances.items():
+        print([e.value for e in node1.in_edges if e.value])
+        print([e.value for e in node2.in_edges if e.value])
+        print(distance)
+        print('---')
+    assert graph.distances == {}
