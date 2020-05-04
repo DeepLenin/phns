@@ -31,23 +31,26 @@ def apply(graph):
     while triples:
         new_triples = []
         for (before,current,after) in triples:
+            # NOTE: we don't apply heuristics to the first or the last phoneme of a phrase
+            # should we or not is a question
+            if before and after:
 
-            if after:
                 phn = RULES["assimilate_last"].get((current.value, after.value))
                 if phn:
-                    new_triples += graph.create_edges(current.from_node, after.to_node, phn, after.value)
+                    new_triples += graph.create_node_between(phn, before, after)
 
                 phn = RULES["assimilate_coalescence"].get((current.value, after.value))
                 if phn:
-                    new_triples += graph.create_edges(current.from_node, after.to_node, phn)
+                    for out_node in after.out_nodes() or [None]:
+                        new_triples += graph.create_node_between(phn, before, out_node)
 
-            if current.value == Phn("ah") and not current.value.stress:
-                new_triples += graph.create_edges(current.from_node, current.to_node, None)
+                if current.value == Phn("ah") and not current.value.stress:
+                    new_triples += graph.create_edge(before, after)
 
-            if current.value.val in {"t", "d"} and before and after and \
-               before.value.val in ARPABET_CONSONANTS and \
-               after.value.val in ARPABET_CONSONANTS:
-                new_triples += graph.create_edges(before.from_node, after.to_node, before.value, after.value)
+                if current.value.val in {"t", "d"} and \
+                   before.value.val in ARPABET_CONSONANTS and \
+                   after.value.val in ARPABET_CONSONANTS:
+                    new_triples += graph.create_edge(before, after)
 
         triples = new_triples
 

@@ -162,44 +162,31 @@ class Graph:
         return itertools.product(node.in_nodes() or [None], [node], node.out_nodes() or [None])
 
 
-    def __fetch_new_triples__(self, new_edge, in_edge=True, out_edge=True):
-        result = []
-        if new_edge.value:
-            result += self.__fetch_triples__(new_edge)
+    def create_edge(self, from_node, to_node):
+        if to_node in from_node.out_nodes():
+            return []
 
-        if out_edge:
-            for out_edge in new_edge.to_node.out_edges:
-                result += self.__fetch_triples__(out_edge, in_edge=new_edge)
+        Edge(from_node, to_node)
 
-        if in_edge:
-            for in_edge in new_edge.from_node.in_edges:
-                result += self.__fetch_triples__(in_edge, out_edge=new_edge)
+        new_triples_before_edge = itertools.product(from_node.in_nodes() or [None], [from_node], [to_node])
+        new_triples_after_edge  = itertools.product([from_node], [to_node], to_node.out_nodes() or [None])
 
-        return result
+        return list(new_triples_before_edge) + list(new_triples_after_edge)
 
 
-    def create_edges(self, from_node, to_node, first_phn, second_phn=None):
-        if first_phn == second_phn:
-            second_phn = None
+    def create_node_between(self, phn, from_node, to_node):
+        if to_node and to_node.value == phn:
+            return self.create_edge(from_node, to_node)
 
-        for edge in from_node.out_edges:
-            if edge.value == first_phn:
-                if not second_phn:
-                    if edge.to_node == to_node:
-                        return []
-                else:
-                    for next_edge in edge.to_node.out_edges:
-                        if next_edge.value == second_phn and next_edge.to_node == to_node:
-                            return []
-
-        if second_phn:
-            new_node = Node()
-            edge1 = Edge(first_phn, from_node, new_node)
-            edge2 = Edge(second_phn, new_node, to_node)
-            return self.__fetch_new_triples__(edge1, out_edge=False) + self.__fetch_new_triples__(edge2, in_edge=False)
+        node = Node(phn)
+        new_triples = self.create_edge(from_node, node)
+        if to_node:
+            new_triples += self.create_edge(node, to_node)
         else:
-            edge = Edge(first_phn, from_node, to_node)
-            return self.__fetch_new_triples__(edge)
+            self.tails.append(Node)
+
+        new_triples += self.__fetch_triples__(node)
+        return new_triples
 
 
 
