@@ -118,7 +118,7 @@ def test_triples():
     graph = Graph()
     pronunciations = [list("hello"), list("halo")]
     graph.attach(pronunciations)
-    strings = ["".join([edge.value for edge in triple if edge]) for triple in graph.triples()]
+    strings = ["".join([node.value for node in triple if node]) for triple in graph.triples()]
     assert sorted(strings) == sorted(["he", "ha", "hel", "hal", "ell", "llo", "alo", "lo"])
 
 
@@ -126,7 +126,7 @@ def test_triples_empty_edges():
     graph = Graph()
     pronunciations = [list("wat"), list("what")]
     graph.attach(pronunciations)
-    strings = ["".join([edge.value for edge in triple if edge]) for triple in graph.triples()]
+    strings = ["".join([node.value for node in triple if node]) for triple in graph.triples()]
     assert sorted(strings) == sorted(['wa', 'wh', 'wha', 'wat', 'hat', 'at'])
 
 
