@@ -135,10 +135,14 @@ def test_calculate_distances():
     pronunciations = [list("wat"), list("what")]
     graph.attach(pronunciations)
     graph.calculate_distances()
-    graph.to_graphviz().view()
+    expected_distances = {
+        ("w", "h"): 1,
+        ("h", "a"): 1,
+        ("w", "a"): 1,
+        ("a", "t"): 1,
+        ("h", "t"): 2,
+        ("w", "t"): 2
+    }
     for (node1, node2), distance in graph.distances.items():
-        print([e.value for e in node1.in_edges if e.value])
-        print([e.value for e in node2.in_edges if e.value])
-        print(distance)
-        print('---')
-    assert graph.distances == {}
+        print(node1.value, node2.value, distance)
+        assert expected_distances[(node1.value, node2.value)] == distance

@@ -32,7 +32,6 @@ def apply(graph):
         new_triples = []
         for (before,current,after) in triples:
             # NOTE: we don't apply heuristics to the first or the last phoneme of a phrase
-            # should we or not is a question
             if before and after:
 
                 phn = RULES["assimilate_last"].get((current.value, after.value))
@@ -41,7 +40,7 @@ def apply(graph):
 
                 phn = RULES["assimilate_coalescence"].get((current.value, after.value))
                 if phn:
-                    for out_node in after.out_nodes() or [None]:
+                    for out_node in after.out_nodes or [None]:
                         new_triples += graph.create_node_between(phn, before, out_node)
 
                 if current.value == Phn("ah") and not current.value.stress:

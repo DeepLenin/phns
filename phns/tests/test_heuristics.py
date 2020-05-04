@@ -76,12 +76,12 @@ def test_unstressed_ah():
 
 def test_skips_word_ah():
     canonical = [["ah"], ["p", "ah0", "l", "iy1", "s"]]
-    changed1 = [["ah"], ["p", "l", "iy1", "s"]]
-    changed2 = [["p", "l", "iy1", "s"]]
-    changed3 = [["p", "ah0", "l", "iy1", "s"]]
-    create_graph_and_check(canonical, changed1, changed2, changed3)
+    changed = [["ah"], ["p", "l", "iy1", "s"]]
+    create_graph_and_check(canonical, changed)
 
 
 def test_new_triples_with_neighboring_none():
     canonical = [["ah", "n", "t", "y"]]
-    create_graph_and_check(canonical)
+    changed1 = [["ah", "n", "y"]]
+    changed2 = [["ah", "n", "ch"]]
+    create_graph_and_check(canonical, changed1, changed2)

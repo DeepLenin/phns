@@ -9,9 +9,11 @@ class Node:
     def __repr__(self):
         return f"Node(\"{self.value}\")"
 
+    @property
     def in_nodes(self):
         return [edge.from_node for edge in self.in_edges]
 
+    @property
     def out_nodes(self):
         return [edge.to_node for edge in self.out_edges]
 
@@ -32,9 +34,12 @@ class Graph:
         self.roots = []
         self.tails = []
 
+
     def calculate_distances(self):
         self.distances = {}
-        self.__distance__([self.root])
+        for root in self.roots:
+            self.__distance__([root])
+
 
     def __distance__(self, prev_nodes):
         node = prev_nodes[-1]
@@ -47,6 +52,7 @@ class Graph:
             prev_nodes.append(next_node)
             self.__distance__(prev_nodes)
             prev_nodes.pop()
+
 
     def attach(self, pronunciations):
         if len(pronunciations) > 1:
@@ -146,7 +152,7 @@ class Graph:
         result = []
         new_prefix = prefix.copy()
         new_prefix.append(node.value)
-        for next_node in node.out_nodes():
+        for next_node in node.out_nodes:
             result.extend(self.__traverse__(next_node, new_prefix))
         return result or [new_prefix]
 
@@ -159,17 +165,27 @@ class Graph:
 
 
     def __fetch_triples__(self, node):
-        return itertools.product(node.in_nodes() or [None], [node], node.out_nodes() or [None])
+        return itertools.product(node.in_nodes or [None], [node], node.out_nodes or [None])
 
 
     def create_edge(self, from_node, to_node):
-        if to_node in from_node.out_nodes():
+        if to_node in from_node.out_nodes:
             return []
+
+        if from_node.value == to_node.value:
+            triples = []
+            if to_node.out_nodes:
+                for node in to_node.out_nodes:
+                    triples += self.create_edge(from_node, node)
+            elif from_node.in_nodes:
+                for node in from_node.in_nodes:
+                    triples += self.create_edge(node, to_node)
+            return triples
 
         Edge(from_node, to_node)
 
-        new_triples_before_edge = itertools.product(from_node.in_nodes() or [None], [from_node], [to_node])
-        new_triples_after_edge  = itertools.product([from_node], [to_node], to_node.out_nodes() or [None])
+        new_triples_before_edge = itertools.product(from_node.in_nodes or [None], [from_node], [to_node])
+        new_triples_after_edge  = itertools.product([from_node], [to_node], to_node.out_nodes or [None])
 
         return list(new_triples_before_edge) + list(new_triples_after_edge)
 
