@@ -21,8 +21,7 @@ def test_attach_single():
     graph = Graph()
     pronunciations = [list("hey")]
     graph.attach(pronunciations)
-
-    assert graph.to_list() == ["h", "e", "y"]
+    assert graph.to_list() == pronunciations
 
 
 def test_attach_multi():
@@ -108,11 +107,11 @@ def test_find_index_of_first_diff_on_multiple():
     assert found == 2
 
 
-def test_edges():
+def test_iter():
     graph = Graph()
     pronunciations = [list("hello"), list("halo")]
     graph.attach(pronunciations)
-    assert sorted([edge.value for edge in graph.edges()]) == sorted(list("helloa"))
+    assert sorted([node.value for node in graph]) == sorted(list("helloa"))
 
 
 def test_triples():

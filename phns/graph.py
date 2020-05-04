@@ -137,18 +137,18 @@ class Graph:
 
     def to_list(self):
         result = []
-        [result.append(it) for it in self.__traverse__(self.root, []) if it not in result]
+        for root in self.roots:
+            [result.append(it) for it in self.__traverse__(root, []) if it not in result]
         return result
 
 
-    # TODO: Fix
     def __traverse__(self, node, prefix):
         result = []
-        for next_node in node.out_nodes:
-            new_prefix = prefix.copy()
-            new_prefix.append(node.value)
+        new_prefix = prefix.copy()
+        new_prefix.append(node.value)
+        for next_node in node.out_nodes():
             result.extend(self.__traverse__(next_node, new_prefix))
-        return result or [prefix]
+        return result or [new_prefix]
 
 
     def triples(self):
@@ -159,7 +159,7 @@ class Graph:
 
 
     def __fetch_triples__(self, node):
-        return itertools.product(node.in_nodes or [None], [node], node.out_nodes or [None])
+        return itertools.product(node.in_nodes() or [None], [node], node.out_nodes() or [None])
 
 
     def __fetch_new_triples__(self, new_edge, in_edge=True, out_edge=True):
