@@ -1,10 +1,12 @@
 import itertools
+import numpy as np
 
 class Node:
-    def __init__(self, value):
+    def __init__(self, value, index):
         self.in_edges = []
         self.out_edges = []
         self.value = value
+        self.index = index
 
     def __repr__(self):
         return f"Node(\"{self.value}\")"
@@ -33,25 +35,44 @@ class Graph:
     def __init__(self):
         self.roots = []
         self.tails = []
+        self.nodes = []
+        self._distance_matrix = None
+        self._transition_matrix = None
+        self._initial_transitions = None
 
 
-    def calculate_distances(self):
-        self.distances = {}
-        for root in self.roots:
-            self.__distance__([root])
+    @property
+    def distance_matrix(self):
+        if self._distance_matrix is None:
+            n = len(self.nodes)
+            mat = np.full((n, n), np.inf)
+            for node in self.nodes:
+                for out in node.out_nodes:
+                    mat[node.index, out.index] = 1
+            for k in range(n):
+                mat = np.minimum(mat, mat[np.newaxis,k,:] + mat[:,k,np.newaxis]) 
+            mat[mat==np.inf] = 0
+            self._distance_matrix = mat
+        return self._distance_matrix
 
 
-    def __distance__(self, prev_nodes):
-        node = prev_nodes[-1]
-        for edge in node.out_edges:
-            next_node = edge.to_node
+    @property
+    def transition_matrix(self):
+        if self._transition_matrix is None:
+            mat = np.exp2(-self.distance_matrix+1)
+            mat[self.distance_matrix == 0] = 0
+            np.fill_diagonal(mat, 1)
+            self._transition_matrix = mat
+        return self._transition_matrix
 
-            for distance, prev_node in enumerate(reversed(prev_nodes)):
-                self.distances[(prev_node, next_node)] = min(self.distances.get((prev_node, next_node), float("inf")), distance + 1)
-
-            prev_nodes.append(next_node)
-            self.__distance__(prev_nodes)
-            prev_nodes.pop()
+    
+    @property
+    def initial_transitions(self):
+        if self._initial_transitions is None:
+            root_indexes = [root.index for root in self.roots] 
+            self._initial_transitions = self.transition_matrix[root_indexes].max(axis=0)/2
+            self._initial_transitions[root_indexes] = 1
+        return self._initial_transitions
 
 
     def attach(self, pronunciations):
@@ -103,9 +124,15 @@ class Graph:
 
         return self
 
+    
+    def __create_node__(self, phn):
+        node = Node(phn, len(self.nodes))
+        self.nodes.append(node)
+        return node
+
 
     def __add_phn__(self, phn, prev_nodes=None):
-        node = Node(phn)
+        node = self.__create_node__(phn)
         if not self.tails and not prev_nodes:
             self.roots.append(node)
         if prev_nodes is None:
@@ -115,27 +142,14 @@ class Graph:
         return node
 
 
-    def __iter__(self):
-        nodes = self.roots
-        visited = set(nodes)
-        while nodes:
-            new_nodes = []
-            for node in nodes:
-                yield node
-                visit_nodes = set(edge.to_node for edge in node.out_edges if edge.to_node not in visited)
-                visited.update(visit_nodes)
-                new_nodes.extend(visit_nodes)
-            nodes = new_nodes
-
-
     def to_graphviz(self):
         import graphviz
 
         dot = graphviz.Digraph()
-        for node in self:
+        for node in self.nodes:
             dot.node(str(id(node)), str(node.value))
 
-        for node in self:
+        for node in self.nodes:
             for edge in node.out_edges:
                 dot.edge(str(id(node)), str(id(edge.to_node)))
         return dot
@@ -159,7 +173,7 @@ class Graph:
 
     def triples(self):
         result = []
-        for node in self:
+        for node in self.nodes:
             result += self.__fetch_triples__(node)
         return result
 
@@ -194,7 +208,7 @@ class Graph:
         if to_node and to_node.value == phn:
             return self.create_edge(from_node, to_node)
 
-        node = Node(phn)
+        node = self.__create_node__(phn)
         new_triples = self.create_edge(from_node, node)
         if to_node:
             new_triples += self.create_edge(node, to_node)

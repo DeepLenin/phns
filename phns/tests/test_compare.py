@@ -1,4 +1,14 @@
-from phns import compare, closest
+from phns.compare import to_emissions
+from phns.graph import Graph
+import numpy as np
+
+
+def test_to_emissions():
+    graph = Graph()
+    pronunciations = [list("wat"), list("what")]
+    graph.attach(pronunciations)
+    emissions = to_emissions(list("wot"), graph)
+    np.testing.assert_equal(emissions, [[1, 0.5, 0.5], [0.5, 0.5, 0.5], [0.5, 0.5, 0.5], [0.5, 0.5, 1]])
 
 
 def test_compare_add():

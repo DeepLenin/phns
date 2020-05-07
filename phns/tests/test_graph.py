@@ -1,5 +1,6 @@
 from phns.graph import Graph, __find_index_of_first_diff__
 from phns.utils import deep_str
+import numpy as np
 
 
 def test_graph_init():
@@ -111,7 +112,7 @@ def test_iter():
     graph = Graph()
     pronunciations = [list("hello"), list("halo")]
     graph.attach(pronunciations)
-    assert sorted([node.value for node in graph]) == sorted(list("helloa"))
+    assert sorted([node.value for node in graph.nodes]) == sorted(list("helloa"))
 
 
 def test_triples():
@@ -130,19 +131,21 @@ def test_triples_empty_edges():
     assert sorted(strings) == sorted(['wa', 'wh', 'wha', 'wat', 'hat', 'at'])
 
 
-def test_calculate_distances():
+def test_distance_matrix():
     graph = Graph()
     pronunciations = [list("wat"), list("what")]
     graph.attach(pronunciations)
-    graph.calculate_distances()
-    expected_distances = {
-        ("w", "h"): 1,
-        ("h", "a"): 1,
-        ("w", "a"): 1,
-        ("a", "t"): 1,
-        ("h", "t"): 2,
-        ("w", "t"): 2
-    }
-    for (node1, node2), distance in graph.distances.items():
-        print(node1.value, node2.value, distance)
-        assert expected_distances[(node1.value, node2.value)] == distance
+    np.testing.assert_equal(graph.distance_matrix, [[0,1,1,2],[0,0,1,2],[0,0,0,1],[0,0,0,0]])
+
+def test_transition_matrix():
+    graph = Graph()
+    pronunciations = [list("wat"), list("what")]
+    graph.attach(pronunciations)
+    np.testing.assert_equal(graph.transition_matrix, np.array([[1,1,1,0.5],[0,1,1,0.5],[0,0,1,1],[0,0,0,1]]))
+
+
+def test_initial_transitions():
+    graph = Graph()
+    pronunciations = [list("wat"), list("what")]
+    graph.attach(pronunciations)
+    np.testing.assert_equal(graph.initial_transitions, np.array([1, 0.5, 0.5, 0.25]))

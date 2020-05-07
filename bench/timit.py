@@ -15,23 +15,63 @@ with open(DATA_PATH + "timit_bench.pkl", "rb") as f:
     data = pickle.load(f)
 
 
+# missing words:
+#    exceptions = [
+#        "motorists'",
+#        "morphophonemic",
+#        "nihilistic",
+#        "radiosterilization",
+#        "exhusband",
+#        "somebody'll",
+#        "smolderingly",
+#        "geocentricism",
+#        "unmagnified",
+#        "stirrin",
+#        "utopianism",
+#        "infuriation",
+#        "preprepared",
+#        "understandingly",
+#        "eventualities",
+#        "micrometeorites",
+#        "herdin'",
+#        "responsively",
+#        "demineralization",
+#        "unwaveringly",
+#        "cap'n",
+#        "mournfully",
+#        "andrei's",
+#        "autofluorescence",
+#        "fasciculations",
+#        "weatherstrip",
+#        "nonsystematic",
+#        "traditionalism",
+#        "chorused",
+#        "micrometeorite",
+#        "reupholstering",
+#        "castorbeans"
+#    ]
+
 cers = []
+skipped = 0
 for item in tqdm(data):
     # Preprocessing data
     _phns = phns.utils.timit_to_cmu(item["phns"])
     _phns = [phn for phn in _phns if phn != "sil"]
 
-    try:
-        # if item['text'] == 'Princes and factions clashed in the open street and died on the open scaffold.\n':
-        #     import ipdb
-        #     ipdb.set_trace()
-        calculated_phns_variants = phns.from_text(item["text"], apply_heuristics=True)
-    except:
-        import ipdb
-        ipdb.set_trace()
-        calculated_phns_variants = phns.from_text(item["text"], apply_heuristics=True)
-        print(item)
-        raise
+    # try:
+    graph = phns.from_text(item["text"], apply_heuristics=True)
+    if graph:
+        graph.distance_matrix
+        graph.transition_matrix
+        graph.initial_transitions
+    else:
+        skipped += 1
+    # except:
+    #     import ipdb
+    #     ipdb.set_trace()
+    #     graph = phns.from_text(item["text"], apply_heuristics=True)
+    #     print(item)
+    #     raise
 
     # if not calculated_phns_variants:
     #     continue
@@ -39,10 +79,12 @@ for item in tqdm(data):
     # best = phns.closest(_phns, calculated_phns_variants)
     # cers.append(best["cer"])
 
+print("skipped: ", skipped)
 # print(cers)
-print({
-    '25%': np.percentile(cers, 25),
-    '50%': np.percentile(cers, 50),
-    '75%': np.percentile(cers, 75),
-    '95%': np.percentile(cers, 95)
-})
+# print({
+#     '25%': np.percentile(cers, 25),
+#     '50%': np.percentile(cers, 50),
+#     '75%': np.percentile(cers, 75),
+#     '95%': np.percentile(cers, 95)
+# })
+
