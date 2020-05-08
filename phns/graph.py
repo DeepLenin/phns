@@ -1,5 +1,6 @@
 import itertools
 import numpy as np
+from scipy.sparse.csgraph import shortest_path
 
 class Node:
     def __init__(self, value, index):
@@ -36,6 +37,7 @@ class Graph:
         self.roots = []
         self.tails = []
         self.nodes = []
+        self._shortest_paths = None
         self._distance_matrix = None
         self._transition_matrix = None
         self._initial_transitions = None
@@ -45,15 +47,20 @@ class Graph:
     def distance_matrix(self):
         if self._distance_matrix is None:
             n = len(self.nodes)
-            mat = np.full((n, n), np.inf)
+            mat = np.zeros((n, n))
             for node in self.nodes:
                 for out in node.out_nodes:
                     mat[node.index, out.index] = 1
-            for k in range(n):
-                mat = np.minimum(mat, mat[np.newaxis,k,:] + mat[:,k,np.newaxis]) 
-            mat[mat==np.inf] = 0
-            self._distance_matrix = mat
+            self._distance_matrix, self._shortest_paths = shortest_path(mat, method='FW', return_predecessors=True)
+            self._distance_matrix[self._distance_matrix == np.inf] = 0
         return self._distance_matrix
+
+
+    @property
+    def shortest_paths(self):
+        if self._shortest_paths is None:
+            self.distance_matrix
+        return self._shortest_paths
 
 
     @property
