@@ -72,6 +72,9 @@ def closest(phns, graph):
         "deletes": [],
         "replaces": [],
         "target": [],
+        # Debug
+        "phns": phns,
+        "match": match,
         "graph": graph
     }
 
@@ -93,9 +96,12 @@ def closest(phns, graph):
     traverse_tip("tail", match[-1], meta)
 
     # TODO: Replace ins+del on same index with replace
-    # for ins_index, val in meta["inserts"]:
-    #     for del_index, val in meta["deletes"]:
-    #         if ins_index == del_index:
+    for ins_index, val in meta["inserts"]:
+        for del_index, val in meta["deletes"]:
+            if ins_index == del_index:
+                print(meta)
+                import ipdb
+                ipdb.set_trace()
 
     # TODO: Add cer to meta
 

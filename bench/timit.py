@@ -58,6 +58,12 @@ for item in tqdm(data):
     _phns = phns.utils.timit_to_cmu(item["phns"])
     _phns = [phn for phn in _phns if phn != "sil"]
 
+    # TODO: Convert TIMIT 64 to our cmu phonemes
+    # TODO: Think about stressed phonemes - how we compare stressed with nonstressed
+    # TODO: Run bench
+
+    import ipdb
+    ipdb.set_trace()
     # try:
     graph = phns.from_text(item["text"], apply_heuristics=True)
     if graph:
