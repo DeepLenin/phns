@@ -61,9 +61,7 @@ for item in tqdm(data):
     # try:
     graph = phns.from_text(item["text"], apply_heuristics=True)
     if graph:
-        graph.distance_matrix
-        graph.transition_matrix
-        graph.initial_transitions
+        phns.closest(_phns, graph)
     else:
         skipped += 1
     # except:
