@@ -236,4 +236,5 @@ def __find_index_of_first_diff__(seqs):
             i += 1
         else:
             return i
-    return 0
+
+    raise Exception
