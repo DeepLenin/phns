@@ -1,0 +1,126 @@
+version: 2.1
+
+workflows:
+  version: 1
+  build_and_test:
+    jobs:
+      - checkout
+      - requirements:
+          requires:
+            - checkout
+      - black:
+          requires:
+            - requirements
+      - isort:
+          requires:
+            - requirements
+      - flake8:
+          requires:
+            - requirements
+      - test:
+          requires:
+            - requirements
+      - bench:
+          requires:
+            - requirements
+
+executors:
+  python:
+    docker:
+      - image: circleci/python:3.7.5
+    environment:
+      PIPENV_VENV_IN_PROJECT: true
+      PYTHONPATH: "/home/circleci/project/src"
+
+jobs:
+  checkout:
+    executor: python
+    steps:
+      - restore_cache:
+          keys:
+            - phns-v1-{{ .Branch }}-{{ .Revision }}
+            - phns-v1-{{ .Branch }}-
+      - checkout
+      - run:
+          name: Refresh master (for dirty checks)
+          command: git fetch origin master
+      - save_cache:
+          key: vic-ml-source-v1-{{ .Branch }}-{{ .Revision }}
+          paths:
+            - .git
+      - persist_to_workspace:
+          root: .
+          paths: .
+
+  requirements:
+    executor: python
+    steps:
+      - attach_workspace:
+          at: .
+      - restore_cache:
+          keys:
+            - deps-v1_1-{{ checksum "Pipfile.lock" }}
+      - run: sudo chown -R circleci:circleci /usr/local/bin
+      - run: sudo chown -R circleci:circleci /usr/local/lib/python3.6/site-packages
+      - run:
+          name: Installing requirements
+          command: |
+            sudo apt install pipenv
+            pipenv install
+      - save_cache:
+          key: deps-v1_1-{{ checksum "Pipfile.lock" }}
+          paths:
+            - '.venv'
+            - '/usr/local/bin'
+            - '/usr/local/lib/python3.6/site-packages'
+      - persist_to_workspace:
+          root: .
+          paths:
+            - '.venv'
+            - '/usr/local/bin'
+            - '/usr/local/lib/python3.6/site-packages'
+
+  black:
+    executor: python
+    steps:
+      - attach_workspace:
+          at: .
+      - run:
+          name: Black check
+          command: pipenv run black --diff --check --target-version py37 ./**/*.py
+
+  flake8:
+    executor: python
+    steps:
+      - attach_workspace:
+          at: .
+      - run:
+          name: Flake8 check
+          command: pipenv run flake8 ./**/*.py
+
+  isort:
+    executor: python
+    steps:
+      - attach_workspace:
+          at: .
+      - run:
+          name: Isort check
+          command: pipenv run isort --diff --check-only ./**/*.py
+
+  test:
+    executor: python
+    steps:
+      - attach_workspace:
+          at: .
+      - run:
+          name: pytest
+          command: pipenv run pytest
+
+  bench:
+    executor: python
+    steps:
+      - attach_workspace:
+          at: .
+      - run:
+          name: pytest
+          command: pipenv run python bench/timit.py
