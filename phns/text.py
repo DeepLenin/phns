@@ -1,44 +1,43 @@
-import os
-import itertools
 from copy import deepcopy
+
 from . import heuristics
-from .utils import cmu, deep_phn
+from .graph import Graph
+from .utils import CMU, deep_phn
 
 
 def __split__(text):
-    return text.lower()    \
-        .replace(".", "")  \
-        .replace("\n", "") \
-        .replace("?", "")  \
-        .replace(",", "")  \
-        .replace(";", "")  \
-        .replace(":", "")  \
-        .replace("\"", "") \
-        .replace("!", "")  \
-        .replace("-", " ") \
+    return (
+        text.lower()
+        .replace(".", "")
+        .replace("\n", "")
+        .replace("?", "")
+        .replace(",", "")
+        .replace(";", "")
+        .replace(":", "")
+        .replace('"', "")
+        .replace("!", "")
+        .replace("-", " ")
         .split()
+    )
 
 
-# TODO: add tests for missing_handler
 def from_text(text, missing_handler=lambda _: False, apply_heuristics=True):
     words = __split__(text)
 
     if not callable(missing_handler):
         raise TypeError("missing_handler should be callable")
 
-    cmu_phns = []
     skip = False
+    graph = Graph()
 
     for word in words:
-        transcription = deepcopy(cmu.get(word)) or deep_phn(missing_handler(word))
+        transcription = deepcopy(CMU.get(word)) or deep_phn(missing_handler(word))
         if transcription:
-            cmu_phns.append(transcription)
+            graph.attach(transcription)
         else:
             skip = True
 
     if not skip:
-        different_pronunciations = list(itertools.product(*cmu_phns))
-        different_pronunciations = [list(pron) for pron in different_pronunciations]
         if apply_heuristics:
-            different_pronunciations = heuristics.apply(different_pronunciations)
-        return different_pronunciations
+            graph = heuristics.apply(graph)
+        return graph

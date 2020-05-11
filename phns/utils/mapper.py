@@ -1,10 +1,6 @@
-# https://github.com/awni/speech/blob/master/examples/timit/phones.60-48-39.map with modifications:
-# 61->40:
-# - keep ao, zh
-# - replace dx with d
-# - set q as sil (was empty in awni)
-# difference with CMU presence of SIL
+# flake8: noqa
 
+# fmt: off
 TIMIT_TO_CMU = {
     "aa":   "aa",
     "ae":   "ae",
@@ -69,17 +65,93 @@ TIMIT_TO_CMU = {
     "zh":   "zh"
 }
 
-# https://en.wikipedia.org/wiki/ARPABET
-# ARPABET covers CMU but bigger (47 > 40)
-ARPABET_TO_ONE_LETTER = {"aa": "a", "ae": "@", "ah": "A", "ao": "c", "aw": "W", "ax": "x", "ay": "Y", "b": "b", "ch": "C", "cl": "-", "d": "d", "dh": "D", "dx": "F", "eh": "E", "el": "L", "en": "N", "epi": "=", "er": "R", "ey": "e", "f": "f", "g": "g", "hh": "h", "ih": "I", "ix": "X", "iy": "i", "jh": "J", "k": "k", "l": "l", "m": "m", "n": "n", "ng": "G", "ow": "o", "oy": "O", "p": "p", "r": "r", "s": "s", "sh": "S", "sil": "_", "t": "t", "th": "T", "uh": "U", "uw": "u", "v": "v", "w": "w", "y": "y", "z": "z", "zh": "Z" }
+ARPABET_TO_ONE_LETTER = {
+    "aa":  "a",
+    "ae":  "@",
+    "ah":  "A",
+    "ao":  "c",
+    "aw":  "W",
+    "ax":  "x",
+    "ay":  "Y",
+    "b":   "b",
+    "ch":  "C",
+    "cl":  "-",
+    "d":   "d",
+    "dh":  "D",
+    "dx":  "F",
+    "eh":  "E",
+    "el":  "L",
+    "en":  "N",
+    "epi": "=",
+    "er":  "R",
+    "ey":  "e",
+    "f":   "f",
+    "g":   "g",
+    "hh":  "h",
+    "ih":  "I",
+    "ix":  "X",
+    "iy":  "i",
+    "jh":  "J",
+    "k":   "k",
+    "l":   "l",
+    "m":   "m",
+    "n":   "n",
+    "ng":  "G",
+    "ow":  "o",
+    "oy":  "O",
+    "p":   "p",
+    "r":   "r",
+    "s":   "s",
+    "sh":  "S",
+    "sil": "_",
+    "t":   "t",
+    "th":  "T",
+    "uh":  "U",
+    "uw":  "u",
+    "v":   "v",
+    "w":   "w",
+    "y":   "y",
+    "z":   "z",
+    "zh":  "Z"
+}
 
-ARPABET_CONSONANTS = {"b", "ch", "d", "dh", "dx", "el", "em", "en", "f", "g", "hh", "jh", "k", "l", "m", "n", "ng", "n", "p", "q", "r", "s", "sh", "t", "th", "v", "w", "wh", "y", "z", "zh"}
-
+ARPABET_CONSONANTS = {
+    "b", "ch", "d", "dh", "dx", "el", "em", "en", "f", "g", "hh", "jh", "k", "l", "m",
+    "n", "ng", "n", "p", "q", "r", "s", "sh", "t", "th", "v", "w", "wh", "y", "z", "zh"
+}
+# fmt: off
 
 
 def timit_to_cmu(data):
+    """Converts string representation of phonemes into CMU format 61 -> 40
+
+    https://github.com/awni/speech/blob/master/examples/timit/phones.60-48-39.map
+    With modifications:
+    61->40:
+        - keep ao, zh
+        - replace dx with d
+        - set q as sil (was empty in awni)
+    Difference with CMU: presence of SIL
+
+    Args:
+        data (List(str)): List of phonemes to map
+
+    Returns:
+        List of phonemes in CMU format
+    """
     return [TIMIT_TO_CMU[str(phn)] for phn in data]
 
 
 def single_char_encode(phns):
+    """Converts string representation of phonemes into single letter representation
+
+    https://en.wikipedia.org/wiki/ARPABET
+    ARPABET covers CMU but bigger (47 > 40)
+
+    Args:
+        data (List(str)): List of phonemes to map
+
+    Returns:
+        List of phonemes in single letter representation
+    """
     return "".join([ARPABET_TO_ONE_LETTER[str(phn)] for phn in phns])

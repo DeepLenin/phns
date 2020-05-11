@@ -1,4 +1,5 @@
+from .compare import closest
 from .text import from_text
-from .compare import compare, closest
+from .utils.cmu import Phn
 
-__all__ = ["from_text", "compare", "closest"]
+__all__ = ["closest", "from_text", "Phn"]
