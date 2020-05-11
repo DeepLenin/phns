@@ -61,10 +61,14 @@ jobs:
           keys:
             - deps-v1_1-{{ checksum "Pipfile.lock" }}
       - run:
-          name: Installing requirements
-          command: |
-            sudo apt install pipenv
-            pipenv install
+          name: Install pipenv
+          command: pip install pipenv
+      - run:
+          name: Installing pipenv dependencies
+          command: pipenv install --dev --pre
+      - run:
+          name: Clean stale dependencies
+          command: pipenv clean
       - save_cache:
           key: deps-v1_1-{{ checksum "Pipfile.lock" }}
           paths:
