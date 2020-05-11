@@ -39,7 +39,7 @@ def test_closest_no_longer_tail():
     phns = ["h", "o", "l"]
     pronunciations = [list("helou"), list("halou")]
     check_closest(phns, pronunciations, {
-        "deletes": [(3, "o"), (4, "u")],
+        "deletes": [(3, 'o'), (4, 'u')],
         "inserts": [],
         "replaces": [(1, "o")],
         "target": ["h", "e", "l", "o", "u"],
@@ -58,24 +58,13 @@ def test_closest_no_root():
 
 
 def test_closest_with_gap_in_middle():
-    phns = list("hou")
-    pronunciations = [list("helou"), list("halou")]
-    check_closest(phns, pronunciations, {
-        "deletes": [(0, "w")],
-        "inserts": [],
-        "replaces": [],
-        "target": ["w", "a", "t"]
-    })
-
-
-def test_closest_with_gap_in_middle2():
     phns = list("hu")
     pronunciations = [list("helou"), list("halou")]
     check_closest(phns, pronunciations, {
-        "deletes": [(0, "w")],
+        "deletes": [(1, 'e'), (2, 'l'), (3, 'o')],
         "inserts": [],
         "replaces": [],
-        "target": ["w", "a", "t"],
+        "target": pronunciations[0],
     })
 
 

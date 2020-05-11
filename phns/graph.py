@@ -42,6 +42,7 @@ class Graph:
         self._shortest_paths = None
         self._distance_matrix = None
         self._transition_matrix = None
+        self._final_transitions = None
         self._initial_transitions = None
 
     @property
@@ -75,11 +76,20 @@ class Graph:
     @property
     def initial_transitions(self):
         if self._initial_transitions is None:
-            root_indexes = [root.index for root in self.roots]
-            self._initial_transitions = self.transition_matrix[root_indexes].max(axis=0)
-            self._initial_transitions /= 2
-            self._initial_transitions[root_indexes] = 1
+            idxs = [it.index for it in self.roots]
+            transitions = self.transition_matrix[idxs].max(axis=0) / 2
+            transitions[idxs] = 1
+            self._initial_transitions = transitions
         return self._initial_transitions
+
+    @property
+    def final_transitions(self):
+        if self._final_transitions is None:
+            idxs = [it.index for it in self.tails]
+            transitions = self.transition_matrix[:, idxs].max(axis=1) / 2
+            transitions[idxs] = 1
+            self._final_transitions = transitions
+        return self._final_transitions
 
     def attach(self, pronunciations):
         if len(pronunciations) > 1:

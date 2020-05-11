@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def viterbi(emissions, transitions, initial=0):
+def viterbi(emissions, transitions, initial=0, final=0):
     """Implements viterbi algorithm search
 
     https://en.wikipedia.org/wiki/Viterbi_algorithm
@@ -26,6 +26,8 @@ def viterbi(emissions, transitions, initial=0):
         scored_transitions = scores[i - 1, :] + transitions.T
         scores[i, :] = np.max(scored_transitions, 1) + emissions[i, :]
         backtrack[i, :] = np.argmax(scored_transitions, 1)
+
+    scores[-1, :] += final
 
     match = np.empty(steps_n, "int32")
     match[-1] = np.argmax(scores[steps_n - 1, :])

@@ -9,34 +9,32 @@ def traverse_shortest_path(kind, from_node_index, to_node_index, meta):
     end = graph.nodes[to_node_index]
     if kind == "tail":
         start, end = end, start
-        skip = True
-    else:
-        skip = False
 
+    path = []
+    predecessor = end
     while True:
-        next_start_index = graph.shortest_paths[start.index, end.index]
-
-        if skip:
-            # Skip first for tail traversing
-            skip = False
-        else:
-            meta["deletes"].append((len(meta["target"]), start.value))
-            meta["target"].append(start.value)
-
-        if next_start_index == start.index:
+        next_index = graph.shortest_paths[start.index, predecessor.index]
+        if next_index == start.index:
             break
+        predecessor = graph.nodes[next_index]
+        path = [predecessor] + path
 
-        start = graph.nodes[next_start_index]
+    if kind == "root":
+        path = [start] + path
+    elif kind == "tail":
+        path.append(end)
 
-    if kind == "tail":
-        meta["deletes"].append((len(meta["target"]), end.value))
-        meta["target"].append(end.value)
+    for node in path:
+        meta["deletes"][len(meta["target"])] = node.value
+        meta["errors"] += 1
+        meta["target"].append(node.value)
 
 
 def add_state(state_index, phn, meta):
     state_node = meta["graph"].nodes[state_index]
     if state_node.value != phn:
-        meta["replaces"].append((len(meta["target"]), phn))
+        meta["replaces"][len(meta["target"])] = phn
+        meta["errors"] += 1
     meta["target"].append(state_node.value)
 
 
@@ -56,14 +54,11 @@ def traverse_tip(kind, state_index, meta):
             else:
                 new_distance = meta["graph"].distance_matrix[tip_index, state_index]
 
-            if new_distance < tip_distance:
+            if new_distance and new_distance < tip_distance:
                 closest_tip_index = tip_index
                 tip_distance = new_distance
 
-        if kind == "tail":
-            traverse_shortest_path(kind, state_index, closest_tip_index, meta)
-        else:
-            traverse_shortest_path(kind, closest_tip_index, state_index, meta)
+        traverse_shortest_path(kind, closest_tip_index, state_index, meta)
 
 
 def closest(phns, graph):
@@ -73,13 +68,15 @@ def closest(phns, graph):
             np.log(emissions),
             np.log(graph.transition_matrix),
             np.log(graph.initial_transitions),
+            np.log(graph.final_transitions),
         )
 
     meta = {
-        "inserts": [],
-        "deletes": [],
-        "replaces": [],
+        "inserts": {},
+        "deletes": {},
+        "replaces": {},
         "target": [],
+        "errors": 0,
         # Debug
         "phns": phns,
         "match": match,
@@ -94,30 +91,27 @@ def closest(phns, graph):
 
         if match[prev_phn_index] == match[orig_phn_index]:
             if graph.nodes[match[orig_phn_index]].value != phns[orig_phn_index]:
-                meta["inserts"].append((len(meta["target"]), phns[orig_phn_index]))
+                meta["inserts"].setdefault(len(meta["target"]), []).append(phns[orig_phn_index])
+                meta["errors"] += 1
 
         else:
             if graph.distance_matrix[match[prev_phn_index], match[orig_phn_index]] != 1:
-                # traverse_shortest_path("normal", prev_phn_index, orig_phn_index, meta)
-                traverse_shortest_path(prev_phn_index, orig_phn_index, meta)
+                traverse_shortest_path("normal", match[prev_phn_index], match[orig_phn_index], meta)
             add_state(match[orig_phn_index], phns[orig_phn_index], meta)
 
     traverse_tip("tail", match[-1], meta)
 
-    # TODO: Replace ins+del on same index with replace
-    for ins_index, val in meta["inserts"]:
-        for del_index, val in meta["deletes"]:
-            if ins_index == del_index:
-                print(meta)
-                import ipdb
+    del meta["graph"]
 
-                ipdb.set_trace()
+    for idx in meta["inserts"]:
+        if idx in meta["deletes"]:
+            del meta["deletes"][idx]
+            phn = meta["inserts"][idx].pop()
+            meta["replaces"][idx] = phn
+            meta["errors"] -= 1
 
-    # TODO: Add cer to meta
-
-    # TODO: Remove graph from meta if not debug
-    # del meta["graph"]
-
+    
+    meta["cer"] = meta["errors"] / len(meta["target"])
     return meta
 
 

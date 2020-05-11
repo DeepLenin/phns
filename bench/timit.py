@@ -1,5 +1,6 @@
 import os
 import pickle
+import numpy as np
 
 from tqdm import tqdm
 
@@ -59,32 +60,27 @@ for item in tqdm(data):
     # TODO: Think about stressed phonemes - how we compare stressed with nonstressed
     # TODO: Run bench
 
-    # import ipdb
-    # ipdb.set_trace()
-    # try:
-    graph = phns.from_text(item["text"], apply_heuristics=True)
-    if graph:
+    try:
+        graph = phns.from_text(item["text"], apply_heuristics=True)
+        if graph:
+            result = phns.closest(_phns, graph)
+            cers.append(result["cer"])
+        else:
+            skipped += 1
+    except:
+        import ipdb
+        ipdb.set_trace()
+        graph = phns.from_text(item["text"], apply_heuristics=True)
         phns.closest(_phns, graph)
-    else:
-        skipped += 1
-    # except:
-    #     import ipdb
-    #     ipdb.set_trace()
-    #     graph = phns.from_text(item["text"], apply_heuristics=True)
-    #     print(item)
-    #     raise
+        raise
 
-    # if not calculated_phns_variants:
-    #     continue
 
-    # best = phns.closest(_phns, calculated_phns_variants)
-    # cers.append(best["cer"])
 
 print("skipped: ", skipped)
-# print(cers)
-# print({
-#     '25%': np.percentile(cers, 25),
-#     '50%': np.percentile(cers, 50),
-#     '75%': np.percentile(cers, 75),
-#     '95%': np.percentile(cers, 95)
-# })
+print(cers)
+print({
+    '25%': np.percentile(cers, 25),
+    '50%': np.percentile(cers, 50),
+    '75%': np.percentile(cers, 75),
+    '95%': np.percentile(cers, 95)
+})

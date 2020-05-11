@@ -33,7 +33,7 @@ class Phn:
         return hash(self.val)
 
     def __eq__(self, other):
-        return self.val == other.val
+        return other and self.val == other.val
 
     def __lt__(self, other):
         return self.val < other.val
