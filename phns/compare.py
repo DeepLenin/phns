@@ -60,7 +60,10 @@ def traverse_tip(kind, state_index, meta):
                 closest_tip_index = tip_index
                 tip_distance = new_distance
 
-        traverse_shortest_path(kind, closest_tip_index, state_index, meta)
+        if kind == "tail":
+            traverse_shortest_path(kind, state_index, closest_tip_index, meta)
+        else:
+            traverse_shortest_path(kind, closest_tip_index, state_index, meta)
 
 
 def closest(phns, graph):
@@ -95,7 +98,8 @@ def closest(phns, graph):
 
         else:
             if graph.distance_matrix[match[prev_phn_index], match[orig_phn_index]] != 1:
-                traverse_shortest_path("normal", prev_phn_index, orig_phn_index, meta)
+                # traverse_shortest_path("normal", prev_phn_index, orig_phn_index, meta)
+                traverse_shortest_path(prev_phn_index, orig_phn_index, meta)
             add_state(match[orig_phn_index], phns[orig_phn_index], meta)
 
     traverse_tip("tail", match[-1], meta)
@@ -113,28 +117,6 @@ def closest(phns, graph):
 
     # TODO: Remove graph from meta if not debug
     # del meta["graph"]
-
-    # 1 -> 2 -> 3 -> 5
-    #   -> 4 ->
-    # hol -> 1,1,3 # 1,2,3
-    # helo
-    #
-    # we want to return
-    # {
-    #    target: helo,
-    #    cer: 0.2,
-    #    inserts: [o -> 1]
-    #    deletes: [e -> 1, o -> 3]
-    #
-    # inserts + deletes in one index == replace
-    # {
-    #    target: helo,
-    #    cer: 0.2,
-    #    deletes: [o -> 3]
-    #    replaces: [ e-o->1 ]
-    #
-    # helo -> 1 -> 2 -> 3 -> 5
-    #
 
     return meta
 
