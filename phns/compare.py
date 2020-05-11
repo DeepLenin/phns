@@ -91,12 +91,16 @@ def closest(phns, graph):
 
         if match[prev_phn_index] == match[orig_phn_index]:
             if graph.nodes[match[orig_phn_index]].value != phns[orig_phn_index]:
-                meta["inserts"].setdefault(len(meta["target"]), []).append(phns[orig_phn_index])
+                meta["inserts"].setdefault(len(meta["target"]), []).append(
+                    phns[orig_phn_index]
+                )
                 meta["errors"] += 1
 
         else:
             if graph.distance_matrix[match[prev_phn_index], match[orig_phn_index]] != 1:
-                traverse_shortest_path("normal", match[prev_phn_index], match[orig_phn_index], meta)
+                traverse_shortest_path(
+                    "normal", match[prev_phn_index], match[orig_phn_index], meta
+                )
             add_state(match[orig_phn_index], phns[orig_phn_index], meta)
 
     traverse_tip("tail", match[-1], meta)
@@ -110,7 +114,6 @@ def closest(phns, graph):
             meta["replaces"][idx] = phn
             meta["errors"] -= 1
 
-    
     meta["cer"] = meta["errors"] / len(meta["target"])
     return meta
 

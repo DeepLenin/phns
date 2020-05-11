@@ -8,6 +8,7 @@ def assert_closest(canonical, closest):
     for k in ["target", "deletes", "inserts", "replaces"]:
         assert canonical.get(k) == closest.get(k), k
 
+
 def check_closest(phns, pronunciations, expected_meta):
     graph = Graph()
     graph.attach(pronunciations)
@@ -27,45 +28,61 @@ def test_to_emissions():
 def test_closest_no_tail():
     phns = ["h", "o", "l"]
     pronunciations = [list("helo"), list("halo")]
-    check_closest(phns, pronunciations, {
-        "deletes": [(3, "o")],
-        "inserts": [],
-        "replaces": [(1, "o")],
-        "target": ["h", "e", "l", "o"],
-    })
+    check_closest(
+        phns,
+        pronunciations,
+        {
+            "deletes": {3: "o"},
+            "inserts": {},
+            "replaces": {1: "o"},
+            "target": ["h", "e", "l", "o"],
+        },
+    )
 
 
 def test_closest_no_longer_tail():
     phns = ["h", "o", "l"]
     pronunciations = [list("helou"), list("halou")]
-    check_closest(phns, pronunciations, {
-        "deletes": [(3, 'o'), (4, 'u')],
-        "inserts": [],
-        "replaces": [(1, "o")],
-        "target": ["h", "e", "l", "o", "u"],
-    })
+    check_closest(
+        phns,
+        pronunciations,
+        {
+            "deletes": {3: "o", 4: "u"},
+            "inserts": {},
+            "replaces": {1: "o"},
+            "target": ["h", "e", "l", "o", "u"],
+        },
+    )
 
 
 def test_closest_no_root():
     phns = ["a", "t"]
     pronunciations = [list("what"), list("wat")]
-    check_closest(phns, pronunciations, {
-        "deletes": [(0, "w")],
-        "inserts": [],
-        "replaces": [],
-        "target": ["w", "a", "t"]
-    })
+    check_closest(
+        phns,
+        pronunciations,
+        {
+            "deletes": {0: "w"},
+            "inserts": {},
+            "replaces": {},
+            "target": ["w", "a", "t"],
+        },
+    )
 
 
 def test_closest_with_gap_in_middle():
     phns = list("hu")
     pronunciations = [list("helou"), list("halou")]
-    check_closest(phns, pronunciations, {
-        "deletes": [(1, 'e'), (2, 'l'), (3, 'o')],
-        "inserts": [],
-        "replaces": [],
-        "target": pronunciations[0],
-    })
+    check_closest(
+        phns,
+        pronunciations,
+        {
+            "deletes": {1: "e", 2: "l", 3: "o"},
+            "inserts": {},
+            "replaces": {},
+            "target": pronunciations[0],
+        },
+    )
 
 
 # TODO: Adapt with new API
