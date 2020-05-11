@@ -1,0 +1,22 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+pytest = "*"
+black = "*"
+flake8 = "*"
+isort = "*"
+tqdm = "*"
+
+[packages]
+numpy = "==1.18.4"
+scipy = "==1.4.1"
+pipfile = "*"
+
+[requires]
+python_version = "3.7"
+
+[pipenv]
+allow_prereleases = "true"
