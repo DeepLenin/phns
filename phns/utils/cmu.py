@@ -22,11 +22,11 @@ class Phn:
         """Splits cmu dict phoneme to phoneme and stress"""
         digit = None
         no_digits = []
-        for ch in self.__phoneme__.lower():
-            if ch.isdigit():
-                digit = int(ch)
+        for char in self.__phoneme__.lower():
+            if char.isdigit():
+                digit = int(char)
             else:
-                no_digits.append(ch)
+                no_digits.append(char)
         return "".join(no_digits), digit
 
     def __hash__(self):
@@ -42,23 +42,24 @@ class Phn:
         return self.val
 
     def __repr__(self):
-        return f"Phn(\"{self.__phoneme__}\")"
+        return f'Phn("{self.__phoneme__}")'
 
     def __deepcopy__(self, memo={}):
         return self
 
-cmu_path = os.path.dirname(os.path.realpath(__file__))
-cmu_path += "/../vendor/cmudict/cmudict.dict"
 
-cmu = {}
-for line in open(cmu_path).readlines():
+CMU_PATH = os.path.dirname(os.path.realpath(__file__))
+CMU_PATH += "/../vendor/cmudict/cmudict.dict"
+
+CMU = {}
+for line in open(CMU_PATH).readlines():
     parts = line.strip().split(" ")
     word = parts[0]
     transcription = [Phn(phn) for phn in parts[1:]]
     if "(" in word:
         word = word.split("(")[0]
-    if word not in cmu:
-        cmu[word] = [transcription]
+    if word not in CMU:
+        CMU[word] = [transcription]
     else:
-        if transcription not in cmu[word]:
-            cmu[word].append(transcription)
+        if transcription not in CMU[word]:
+            CMU[word].append(transcription)

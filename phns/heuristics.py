@@ -1,7 +1,4 @@
-import itertools
-from copy import deepcopy
 from .utils.cmu import Phn
-from .utils import single_char_encode, flatten, remove_doubles
 from .utils.mapper import ARPABET_CONSONANTS
 
 RULES = {
@@ -21,17 +18,29 @@ RULES = {
     "assimilate_coalescence": {
         (Phn("t"), Phn("y")): Phn("ch"),  # last year
         (Phn("d"), Phn("y")): Phn("jh"),  # would you
-    }
+    },
 }
 
 
 def apply(graph):
+    """Modifies graph according to heuristics
+
+    Recursively matches and applies heuristics for every triplet of original
+    and modified after heuristic application graph.
+
+    Args:
+        graph (Graph): Original graph
+
+    Returns:
+        Modified graph
+    """
     triples = list(graph.triples())
 
     while triples:
         new_triples = []
-        for (before,current,after) in triples:
-            # NOTE: we don't apply heuristics to the first or the last phoneme of a phrase
+        for (before, current, after) in triples:
+            # NOTE: we don't apply heuristics to the first or the last phoneme
+            # of a phrase
             if before and after:
 
                 phn = RULES["assimilate_last"].get((current.value, after.value))
@@ -46,9 +55,11 @@ def apply(graph):
                 if current.value == Phn("ah") and not current.value.stress:
                     new_triples += graph.create_edge(before, after)
 
-                if current.value.val in {"t", "d"} and \
-                   before.value.val in ARPABET_CONSONANTS and \
-                   after.value.val in ARPABET_CONSONANTS:
+                if (
+                    current.value.val in {"t", "d"}
+                    and before.value.val in ARPABET_CONSONANTS
+                    and after.value.val in ARPABET_CONSONANTS
+                ):
                     new_triples += graph.create_edge(before, after)
 
         triples = new_triples

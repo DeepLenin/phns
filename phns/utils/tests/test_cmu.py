@@ -1,5 +1,5 @@
-from phns.utils import cmu
+from phns.utils import CMU
 
 
 def test_cmu_length():
-    assert len(cmu) == 125997
+    assert len(CMU) == 125997

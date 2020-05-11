@@ -1,12 +1,9 @@
-import numpy as np
 import os
-from tqdm import tqdm
 import pickle
 
-import sys
-sys.path.append('../phns')
-import phns
+from tqdm import tqdm
 
+import phns
 
 DATA_PATH = os.path.dirname(os.path.realpath(__file__)) + "/../data/"
 
@@ -62,8 +59,8 @@ for item in tqdm(data):
     # TODO: Think about stressed phonemes - how we compare stressed with nonstressed
     # TODO: Run bench
 
-    import ipdb
-    ipdb.set_trace()
+    # import ipdb
+    # ipdb.set_trace()
     # try:
     graph = phns.from_text(item["text"], apply_heuristics=True)
     if graph:
@@ -91,4 +88,3 @@ print("skipped: ", skipped)
 #     '75%': np.percentile(cers, 75),
 #     '95%': np.percentile(cers, 95)
 # })
-
