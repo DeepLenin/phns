@@ -1,0 +1,14 @@
+pre-commit:
+  commands:
+    black:
+      tags: linter
+      glob: "**/*.py"
+      run: pipenv run black --diff --check --target-version py37 {staged_files}
+    flake8:
+      tags: linter
+      glob: "**/*.py"
+      run: pipenv run flake8 {staged_files}
+    isort:
+      tags: linter
+      glob: "**/*.py"
+      run: pipenv run isort --diff --check-only {staged_files}
