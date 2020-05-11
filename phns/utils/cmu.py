@@ -7,20 +7,19 @@ class Phn:
     def __new__(cls, val):
         if isinstance(val, Phn):
             return val
-
-        _phn = val.lower()
-        _phn = val.replace("0", "")
+        _phn = val.lower().replace("0", "")
         if _phn not in cls.PHONEMES:
-            cls.PHONEMES[_phn] = super(Phn, cls).__new__(cls)
+            instance = super(Phn, cls).__new__(cls)
+            instance.__custom_init__(_phn)
+            cls.PHONEMES[_phn] = instance
         return cls.PHONEMES[_phn]
 
-    def __init__(self, phoneme):
+    def __custom_init__(self, phoneme):
         self.__phoneme__ = phoneme
         self.val, self.stress = self.process()
 
     def process(self):
         """Splits cmu dict phoneme to phoneme and stress"""
-
         digit = None
         no_digits = []
         for ch in self.__phoneme__.lower():
@@ -29,6 +28,12 @@ class Phn:
             else:
                 no_digits.append(ch)
         return "".join(no_digits), digit
+
+    def __hash__(self):
+        return hash(self.val)
+
+    def __eq__(self, other):
+        return self.val == other.val
 
     def __lt__(self, other):
         return self.val < other.val
@@ -49,9 +54,11 @@ cmu = {}
 for line in open(cmu_path).readlines():
     parts = line.strip().split(" ")
     word = parts[0]
+    transcription = [Phn(phn) for phn in parts[1:]]
     if "(" in word:
         word = word.split("(")[0]
     if word not in cmu:
-        cmu[word] = []
-
-    cmu[word].append([Phn(phn) for phn in parts[1:]])
+        cmu[word] = [transcription]
+    else:
+        if transcription not in cmu[word]:
+            cmu[word].append(transcription)

@@ -56,7 +56,7 @@ skipped = 0
 for item in tqdm(data):
     # Preprocessing data
     _phns = phns.utils.timit_to_cmu(item["phns"])
-    _phns = [phn for phn in _phns if phn != "sil"]
+    _phns = [phns.Phn(phn) for phn in _phns if phn != "sil"]
 
     # TODO: Convert TIMIT 64 to our cmu phonemes
     # TODO: Think about stressed phonemes - how we compare stressed with nonstressed
