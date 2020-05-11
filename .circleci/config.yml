@@ -30,7 +30,7 @@ executors:
       - image: circleci/python:3.7.7
     environment:
       PIPENV_VENV_IN_PROJECT: true
-      PYTHONPATH: "/home/circleci/project/src"
+      PYTHONPATH: "/home/circleci/project"
 
 jobs:
   checkout:

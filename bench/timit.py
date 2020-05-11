@@ -1,12 +1,9 @@
 import os
 import pickle
-import sys
 
 from tqdm import tqdm
 
-sys.path.append("../phns")
 import phns
-
 
 DATA_PATH = os.path.dirname(os.path.realpath(__file__)) + "/../data/"
 
