@@ -1,9 +1,9 @@
-import numpy as np
 import os
-from tqdm import tqdm
 import pickle
-
 import sys
+
+from tqdm import tqdm
+
 sys.path.append('../phns')
 import phns
 
@@ -91,4 +91,3 @@ print("skipped: ", skipped)
 #     '75%': np.percentile(cers, 75),
 #     '95%': np.percentile(cers, 95)
 # })
-

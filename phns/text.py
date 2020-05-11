@@ -1,9 +1,8 @@
-import os
-import itertools
 from copy import deepcopy
+
 from . import heuristics
 from .graph import Graph
-from .utils import cmu, deep_phn
+from .utils import CMU, deep_phn
 
 
 def __split__(text):
@@ -30,7 +29,7 @@ def from_text(text, missing_handler=lambda _: False, apply_heuristics=True):
     graph = Graph()
 
     for word in words:
-        transcription = deepcopy(cmu.get(word)) or deep_phn(missing_handler(word))
+        transcription = deepcopy(CMU.get(word)) or deep_phn(missing_handler(word))
         if transcription:
             graph.attach(transcription)
         else:

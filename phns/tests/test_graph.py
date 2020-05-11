@@ -1,6 +1,6 @@
-from phns.graph import Graph, __find_index_of_first_diff__
-from phns.utils import deep_str
 import numpy as np
+
+from phns.graph import Graph, __find_index_of_first_diff__
 
 
 def test_graph_init():
@@ -119,29 +119,34 @@ def test_triples():
     graph = Graph()
     pronunciations = [list("hello"), list("halo")]
     graph.attach(pronunciations)
+    canonical = ["he", "ha", "hel", "hal", "ell", "llo", "alo", "lo"]
     strings = ["".join([node.value for node in triple if node]) for triple in graph.triples()]
-    assert sorted(strings) == sorted(["he", "ha", "hel", "hal", "ell", "llo", "alo", "lo"])
+    assert sorted(canonical) == sorted(strings)
 
 
 def test_triples_empty_edges():
     graph = Graph()
     pronunciations = [list("wat"), list("what")]
     graph.attach(pronunciations)
+    canonical = ['wa', 'wh', 'wha', 'wat', 'hat', 'at']
     strings = ["".join([node.value for node in triple if node]) for triple in graph.triples()]
-    assert sorted(strings) == sorted(['wa', 'wh', 'wha', 'wat', 'hat', 'at'])
+    assert sorted(canonical) == sorted(strings)
 
 
 def test_distance_matrix():
     graph = Graph()
     pronunciations = [list("wat"), list("what")]
     graph.attach(pronunciations)
-    np.testing.assert_equal(graph.distance_matrix, [[0,1,1,2],[0,0,1,2],[0,0,0,1],[0,0,0,0]])
+    canonical = [[0, 1, 1, 2], [0, 0, 1, 2], [0, 0, 0, 1], [0, 0, 0, 0]]
+    np.testing.assert_equal(canonical, graph.distance_matrix)
+
 
 def test_transition_matrix():
     graph = Graph()
     pronunciations = [list("wat"), list("what")]
     graph.attach(pronunciations)
-    np.testing.assert_equal(graph.transition_matrix, np.array([[1,1,1,0.5],[0,1,1,0.5],[0,0,1,1],[0,0,0,1]]))
+    canonical = np.array([[1, 1, 1, 0.5], [0, 1, 1, 0.5], [0, 0, 1, 1], [0, 0, 0, 1]])
+    np.testing.assert_equal(canonical, graph.transition_matrix)
 
 
 def test_initial_transitions():

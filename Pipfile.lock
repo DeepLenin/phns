@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "e9f080372a361da41148920968317b7adf1b82f7d2019bb7c4c5b23a1aaed586"
+            "sha256": "0e0ae1e9bb64ce4c224581460126da315202ac91badbe3c13829599b75c942d4"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -132,12 +132,9 @@
             "version": "==1.6.0"
         },
         "isort": {
-            "hashes": [
-                "sha256:54da7e92468955c4fceacd0c86bd0ec997b0e1ee80d97f67c35a78b719dccab1",
-                "sha256:6e811fcb295968434526407adb8796944f1988c5b65e8139058f2014cbe100fd"
-            ],
-            "index": "pypi",
-            "version": "==4.3.21"
+            "editable": true,
+            "git": "https://github.com/timothycrosley/isort.git",
+            "ref": "51099cf8f6c305e238e088b2a460ef16dbe90edd"
         },
         "mccabe": {
             "hashes": [

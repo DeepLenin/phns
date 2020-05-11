@@ -1,4 +1,5 @@
 import numpy as np
+
 from .utils.viterbi import viterbi
 
 
@@ -65,7 +66,11 @@ def traverse_tip(kind, state_index, meta):
 def closest(phns, graph):
     emissions = to_emissions(phns, graph)
     with np.errstate(divide='ignore'):
-        match = viterbi(np.log(emissions), np.log(graph.transition_matrix), np.log(graph.initial_transitions))
+        match = viterbi(
+            np.log(emissions),
+            np.log(graph.transition_matrix),
+            np.log(graph.initial_transitions)
+        )
 
     meta = {
         "inserts": [],
@@ -90,7 +95,7 @@ def closest(phns, graph):
 
         else:
             if graph.distance_matrix[match[prev_phn_index], match[orig_phn_index]] != 1:
-                traverse_shortest_path(prev_phn_index, orig_phn_index, meta)
+                traverse_shortest_path("normal", prev_phn_index, orig_phn_index, meta)
             add_state(match[orig_phn_index], phns[orig_phn_index], meta)
 
     traverse_tip("tail", match[-1], meta)
@@ -107,8 +112,6 @@ def closest(phns, graph):
 
     # TODO: Remove graph from meta if not debug
     # del meta["graph"]
-
-    return meta
 
     # 1 -> 2 -> 3 -> 5
     #   -> 4 ->
@@ -131,12 +134,13 @@ def closest(phns, graph):
     #
     # helo -> 1 -> 2 -> 3 -> 5
     #
-    return [graph.nodes[i].value for i in match]
+
+    return meta
 
 
 # TODO: Move to graph modules
 def to_emissions(phns, graph):
-    emissions = np.full((len(phns), len(graph.nodes)), 1/2)
+    emissions = np.full((len(phns), len(graph.nodes)), 0.5)
 
     indexes = {}
     for i, phn in enumerate(phns):

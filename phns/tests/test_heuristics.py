@@ -1,6 +1,6 @@
+from phns.graph import Graph
 from phns.heuristics import apply
 from phns.utils import deep_phn, flatten
-from phns.graph import Graph
 
 
 def create_graph_and_check(canonical, *changed):
@@ -10,8 +10,8 @@ def create_graph_and_check(canonical, *changed):
     for word in canonical:
         graph.attach([word])
     apply(graph)
-    assert sorted(graph.to_list()) == sorted([flatten(canonical), *[flatten(it) for it in changed]])
-
+    canonical = [flatten(canonical), *[flatten(it) for it in changed]]
+    assert sorted(canonical) == sorted(graph.to_list())
 
 
 def test_assimilate_without_changes():
@@ -26,7 +26,8 @@ def test_assimilate_with_one_change():
 
 
 def test_assimilate_with_two_changes():
-    canonical = [["f", "ae", "t"], ["b", "oy"], ["g", "uh", "d"], ["b", "oy"]]  # fat boy good boy
+    # fat boy good boy
+    canonical = [["f", "ae", "t"], ["b", "oy"], ["g", "uh", "d"], ["b", "oy"]]
     changed1 = [["f", "ae", "t"], ["b", "oy"], ["g", "uh"], ["b", "oy"]]
     changed2 = [["f", "ae", "p"], ["b", "oy"], ["g", "uh", "d"], ["b", "oy"]]
     changed3 = [["f", "ae", "p"], ["b", "oy"], ["g", "uh"], ["b", "oy"]]
@@ -35,7 +36,7 @@ def test_assimilate_with_two_changes():
 
 def test_assimilate_coalescence():
     canonical = [["g", "uh", "d"], ["y", "ih", "r"]]
-    changed   = [["g", "uh"], ["jh", "ih", "r"]]
+    changed = [["g", "uh"], ["jh", "ih", "r"]]
     create_graph_and_check(canonical, changed)
 
 

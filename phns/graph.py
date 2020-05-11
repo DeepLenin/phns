@@ -1,6 +1,8 @@
 import itertools
+
 import numpy as np
 from scipy.sparse.csgraph import shortest_path
+
 
 class Node:
     def __init__(self, value, index):
@@ -42,19 +44,18 @@ class Graph:
         self._transition_matrix = None
         self._initial_transitions = None
 
-
     @property
     def distance_matrix(self):
         if self._distance_matrix is None:
-            n = len(self.nodes)
-            mat = np.zeros((n, n))
+            mat = np.zeros((len(self.nodes), len(self.nodes)))
             for node in self.nodes:
                 for out in node.out_nodes:
                     mat[node.index, out.index] = 1
-            self._distance_matrix, self._shortest_paths = shortest_path(mat, method='FW', return_predecessors=True)
+            self._distance_matrix, self._shortest_paths = shortest_path(
+                mat, method='FW', return_predecessors=True
+            )
             self._distance_matrix[self._distance_matrix == np.inf] = 0
         return self._distance_matrix
-
 
     @property
     def shortest_paths(self):
@@ -62,40 +63,41 @@ class Graph:
             self.distance_matrix
         return self._shortest_paths
 
-
     @property
     def transition_matrix(self):
         if self._transition_matrix is None:
-            mat = np.exp2(-self.distance_matrix+1)
+            mat = np.exp2(-self.distance_matrix + 1)
             mat[self.distance_matrix == 0] = 0
             np.fill_diagonal(mat, 1)
             self._transition_matrix = mat
         return self._transition_matrix
 
-    
     @property
     def initial_transitions(self):
         if self._initial_transitions is None:
-            root_indexes = [root.index for root in self.roots] 
-            self._initial_transitions = self.transition_matrix[root_indexes].max(axis=0)/2
+            root_indexes = [root.index for root in self.roots]
+            self._initial_transitions = self.transition_matrix[root_indexes].max(axis=0)
+            self._initial_transitions /= 2
             self._initial_transitions[root_indexes] = 1
         return self._initial_transitions
-
 
     def attach(self, pronunciations):
         if len(pronunciations) > 1:
             # h e l l o
             # h e w l o
             # h a l o
-            # 1. zip вперед и находим первый разный элемент - с этого элемента наши ноды расходятся
-            # 2. zip с конца с подсчетом индекса в отрицательном виде (-1, -2...) - находим первый разный элемент с конца - это место где наши ветки объединяются
+            # 1. zip вперед и находим первый разный элемент - с этого элемента
+            #   наши ноды расходятся
+            # 2. zip с конца с подсчетом индекса в отрицательном виде
+            #   (-1, -2...) - находим первый разный элемент с конца - это место где
+            #   наши ветки объединяются
             # 3. Создаем начальную общую ветку
             # 4. Создаем все разные средние ветки
             # 5. Объединяем все ветки в одну, даже если это просто нода конца слова.
 
             i_diff_forward = __find_index_of_first_diff__(pronunciations)
             reversed_pronunciations = [list(reversed(p)) for p in pronunciations]
-            i_diff_reverse = -__find_index_of_first_diff__(reversed_pronunciations)-1
+            i_diff_reverse = -__find_index_of_first_diff__(reversed_pronunciations) - 1
 
             for i in range(i_diff_forward):
                 self.tails = [self.__add_phn__(pronunciations[0][i])]
@@ -103,7 +105,7 @@ class Graph:
             new_tails = []
 
             if not self.roots and not i_diff_forward:
-                least_len = min([len(pronunciation) for pronunciation in pronunciations])
+                least_len = min([len(pr) for pr in pronunciations])
                 if least_len - i_diff_forward < -i_diff_reverse:
                     i_diff_reverse += 1
 
@@ -123,7 +125,7 @@ class Graph:
 
             self.tails = new_tails
 
-            for i in range(i_diff_reverse+1, 0):
+            for i in range(i_diff_reverse + 1, 0):
                 self.tails = [self.__add_phn__(pronunciations[0][i])]
         else:
             for phn in pronunciations[0]:
@@ -131,12 +133,10 @@ class Graph:
 
         return self
 
-    
     def __create_node__(self, phn):
         node = Node(phn, len(self.nodes))
         self.nodes.append(node)
         return node
-
 
     def __add_phn__(self, phn, prev_nodes=None):
         node = self.__create_node__(phn)
@@ -147,7 +147,6 @@ class Graph:
         for prev_node in prev_nodes:
             Edge(from_node=prev_node, to_node=node)
         return node
-
 
     def to_graphviz(self):
         import graphviz
@@ -161,13 +160,13 @@ class Graph:
                 dot.edge(str(id(node)), str(id(edge.to_node)))
         return dot
 
-
     def to_list(self):
         result = []
         for root in self.roots:
-            [result.append(it) for it in self.__traverse__(root, []) if it not in result]
+            for node in self.__traverse__(root, []):
+                if node not in result:
+                    result.append(node)
         return result
-
 
     def __traverse__(self, node, prefix):
         result = []
@@ -177,17 +176,16 @@ class Graph:
             result.extend(self.__traverse__(next_node, new_prefix))
         return result or [new_prefix]
 
-
     def triples(self):
         result = []
         for node in self.nodes:
             result += self.__fetch_triples__(node)
         return result
 
-
     def __fetch_triples__(self, node):
-        return itertools.product(node.in_nodes or [None], [node], node.out_nodes or [None])
-
+        return itertools.product(
+            node.in_nodes or [None], [node], node.out_nodes or [None]
+        )
 
     def create_edge(self, from_node, to_node):
         if to_node in from_node.out_nodes:
@@ -205,11 +203,14 @@ class Graph:
 
         Edge(from_node, to_node)
 
-        new_triples_before_edge = itertools.product(from_node.in_nodes or [None], [from_node], [to_node])
-        new_triples_after_edge  = itertools.product([from_node], [to_node], to_node.out_nodes or [None])
+        new_triples_before_edge = itertools.product(
+            from_node.in_nodes or [None], [from_node], [to_node]
+        )
+        new_triples_after_edge = itertools.product(
+            [from_node], [to_node], to_node.out_nodes or [None]
+        )
 
         return list(new_triples_before_edge) + list(new_triples_after_edge)
-
 
     def create_node_between(self, phn, from_node, to_node):
         if to_node and to_node.value == phn:
@@ -226,7 +227,6 @@ class Graph:
         return new_triples
 
 
-
 def __find_index_of_first_diff__(seqs):
     i = 0
     cardinality = len(seqs)
@@ -236,3 +236,4 @@ def __find_index_of_first_diff__(seqs):
             i += 1
         else:
             return i
+    return 0

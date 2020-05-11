@@ -22,6 +22,8 @@ def test_from_text_multiple_words():
 def test_from_text_multiple_words_with_heuristics():
     res = from_text("fat boy texts good girl", apply_heuristics=True).to_list()
     assert len(res) == 16
+
+    # fmt: off
     assert sorted(deep_str(res)) == sorted([
         ['f', 'ae', 'p', 'b', 'oy', 't', 'eh', 'k', 's', 'g', 'ih', 'd', 'g', 'er', 'l'],
         ['f', 'ae', 'p', 'b', 'oy', 't', 'eh', 'k', 's', 'g', 'ih', 'g', 'er', 'l'],
@@ -40,6 +42,7 @@ def test_from_text_multiple_words_with_heuristics():
         ['f', 'ae', 't', 'b', 'oy', 't', 'eh', 'k', 's', 't', 's', 'g', 'uh', 'd', 'g', 'er', 'l'],
         ['f', 'ae', 't', 'b', 'oy', 't', 'eh', 'k', 's', 't', 's', 'g', 'uh', 'g', 'er', 'l']
     ])
+    # fmt: on
 
 
 def test_from_text_missing_handler():

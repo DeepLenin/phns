@@ -1,4 +1,4 @@
-from phns.utils import timit_to_cmu, single_char_encode, deep_str
+from phns.utils import single_char_encode, timit_to_cmu
 
 
 def test_timit_to_cmu():

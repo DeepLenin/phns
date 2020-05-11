@@ -1,4 +1,4 @@
-from phns.utils import flatten, remove_doubles, deep_str, deep_phn
+from phns.utils import deep_phn, deep_str, flatten, remove_doubles
 from phns.utils.cmu import Phn
 
 

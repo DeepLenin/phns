@@ -1,8 +1,8 @@
-from .cmu import cmu, Phn
-from .mapper import timit_to_cmu, single_char_encode
+from .cmu import CMU, Phn
+from .mapper import single_char_encode, timit_to_cmu
 
 __all__ = [
-    "cmu",
+    "CMU",
     "deep_str",
     "deep_phn",
     "flatten",

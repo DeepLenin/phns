@@ -1,7 +1,4 @@
-import itertools
-from copy import deepcopy
 from .utils.cmu import Phn
-from .utils import single_char_encode, flatten, remove_doubles
 from .utils.mapper import ARPABET_CONSONANTS
 
 RULES = {
@@ -26,12 +23,24 @@ RULES = {
 
 
 def apply(graph):
+    """Modifies graph according to heuristics
+
+    Recursively matches and applies heuristics for every triplet of original
+    and modified after heuristic application graph.
+
+    Args:
+        graph (Graph): Original graph
+
+    Returns:
+        Modified graph
+    """
     triples = list(graph.triples())
 
     while triples:
         new_triples = []
-        for (before,current,after) in triples:
-            # NOTE: we don't apply heuristics to the first or the last phoneme of a phrase
+        for (before, current, after) in triples:
+            # NOTE: we don't apply heuristics to the first or the last phoneme
+            # of a phrase
             if before and after:
 
                 phn = RULES["assimilate_last"].get((current.value, after.value))
