@@ -46,22 +46,6 @@ def test_closest_no_longer_tail():
     assert_closest(result, meta)
 
 
-def test_closest_no_longer_tail2():
-    phns = ["h", "o", "u", "s", "l"]
-    graph = Graph()
-    pronunciations = [list("helou"), list("halou")]
-    graph.attach(pronunciations)
-    meta = closest(phns, graph)
-    print(meta)
-    result = {
-        "deletes": [(3, "o"), (4, "u")],
-        "inserts": [(1, "o"), (1, "u")],
-        "replaces": [],
-        "target": ["h", "e", "l", "o", "u"]
-    }
-    assert_closest(result, meta)
-
-
 def test_closest_no_root():
     phns = ["a", "t"]
     graph = Graph()
