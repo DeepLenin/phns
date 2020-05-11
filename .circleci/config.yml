@@ -27,7 +27,7 @@ workflows:
 executors:
   python:
     docker:
-      - image: circleci/python:3.7.5
+      - image: circleci/python:3.7.7
     environment:
       PIPENV_VENV_IN_PROJECT: true
       PYTHONPATH: "/home/circleci/project/src"
