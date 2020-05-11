@@ -4,7 +4,7 @@ import sys
 
 from tqdm import tqdm
 
-sys.path.append('../phns')
+sys.path.append("../phns")
 import phns
 
 
@@ -62,8 +62,8 @@ for item in tqdm(data):
     # TODO: Think about stressed phonemes - how we compare stressed with nonstressed
     # TODO: Run bench
 
-    import ipdb
-    ipdb.set_trace()
+    # import ipdb
+    # ipdb.set_trace()
     # try:
     graph = phns.from_text(item["text"], apply_heuristics=True)
     if graph:

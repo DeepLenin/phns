@@ -6,17 +6,19 @@ from .utils import CMU, deep_phn
 
 
 def __split__(text):
-    return text.lower()    \
-        .replace(".", "")  \
-        .replace("\n", "") \
-        .replace("?", "")  \
-        .replace(",", "")  \
-        .replace(";", "")  \
-        .replace(":", "")  \
-        .replace("\"", "") \
-        .replace("!", "")  \
-        .replace("-", " ") \
+    return (
+        text.lower()
+        .replace(".", "")
+        .replace("\n", "")
+        .replace("?", "")
+        .replace(",", "")
+        .replace(";", "")
+        .replace(":", "")
+        .replace('"', "")
+        .replace("!", "")
+        .replace("-", " ")
         .split()
+    )
 
 
 def from_text(text, missing_handler=lambda _: False, apply_heuristics=True):

@@ -12,7 +12,7 @@ class Node:
         self.index = index
 
     def __repr__(self):
-        return f"Node(\"{self.value}\")"
+        return f'Node("{self.value}")'
 
     @property
     def in_nodes(self):
@@ -52,7 +52,7 @@ class Graph:
                 for out in node.out_nodes:
                     mat[node.index, out.index] = 1
             self._distance_matrix, self._shortest_paths = shortest_path(
-                mat, method='FW', return_predecessors=True
+                mat, method="FW", return_predecessors=True
             )
             self._distance_matrix[self._distance_matrix == np.inf] = 0
         return self._distance_matrix

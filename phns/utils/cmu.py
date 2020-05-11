@@ -42,7 +42,7 @@ class Phn:
         return self.val
 
     def __repr__(self):
-        return f"Phn(\"{self.__phoneme__}\")"
+        return f'Phn("{self.__phoneme__}")'
 
     def __deepcopy__(self, memo={}):
         return self

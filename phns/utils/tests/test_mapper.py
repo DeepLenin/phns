@@ -10,4 +10,4 @@ def test_timit_to_cmu():
 def test_single_char_encode():
     orig = ["aa", "l", "sil", "sh", "sh"]
     mapped = single_char_encode(orig)
-    assert mapped == 'al_SS'
+    assert mapped == "al_SS"

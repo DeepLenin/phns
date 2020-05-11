@@ -65,11 +65,11 @@ def traverse_tip(kind, state_index, meta):
 
 def closest(phns, graph):
     emissions = to_emissions(phns, graph)
-    with np.errstate(divide='ignore'):
+    with np.errstate(divide="ignore"):
         match = viterbi(
             np.log(emissions),
             np.log(graph.transition_matrix),
-            np.log(graph.initial_transitions)
+            np.log(graph.initial_transitions),
         )
 
     meta = {
@@ -80,7 +80,7 @@ def closest(phns, graph):
         # Debug
         "phns": phns,
         "match": match,
-        "graph": graph
+        "graph": graph,
     }
 
     traverse_tip("root", match[0], meta)
@@ -106,6 +106,7 @@ def closest(phns, graph):
             if ins_index == del_index:
                 print(meta)
                 import ipdb
+
                 ipdb.set_trace()
 
     # TODO: Add cer to meta

@@ -15,7 +15,7 @@ def test_from_text_multiple_words():
         ["hh", "ah", "l", "ow", "w", "er", "l", "d", "ae", "b", "z", "ah", "g"],
         ["hh", "ah", "l", "ow", "w", "er", "l", "d", "ae", "b", "z", "uh", "g"],
         ["hh", "eh", "l", "ow", "w", "er", "l", "d", "ae", "b", "z", "ah", "g"],
-        ["hh", "eh", "l", "ow", "w", "er", "l", "d", "ae", "b", "z", "uh", "g"]
+        ["hh", "eh", "l", "ow", "w", "er", "l", "d", "ae", "b", "z", "uh", "g"],
     ]
 
 
@@ -40,14 +40,14 @@ def test_from_text_multiple_words_with_heuristics():
         ['f', 'ae', 't', 'b', 'oy', 't', 'eh', 'k', 's', 't', 's', 'g', 'ih', 'd', 'g', 'er', 'l'],
         ['f', 'ae', 't', 'b', 'oy', 't', 'eh', 'k', 's', 't', 's', 'g', 'ih', 'g', 'er', 'l'],
         ['f', 'ae', 't', 'b', 'oy', 't', 'eh', 'k', 's', 't', 's', 'g', 'uh', 'd', 'g', 'er', 'l'],
-        ['f', 'ae', 't', 'b', 'oy', 't', 'eh', 'k', 's', 't', 's', 'g', 'uh', 'g', 'er', 'l']
+        ['f', 'ae', 't', 'b', 'oy', 't', 'eh', 'k', 's', 't', 's', 'g', 'uh', 'g', 'er', 'l'],
     ])
     # fmt: on
 
 
 def test_from_text_missing_handler():
-    res = from_text("foobar42", lambda _: [['p']]).to_list()
-    assert deep_str(res) == [['p']]
+    res = from_text("foobar42", lambda _: [["p"]]).to_list()
+    assert deep_str(res) == [["p"]]
 
 
 def test_from_text_missing_handler_skip():

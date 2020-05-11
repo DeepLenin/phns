@@ -120,7 +120,9 @@ def test_triples():
     pronunciations = [list("hello"), list("halo")]
     graph.attach(pronunciations)
     canonical = ["he", "ha", "hel", "hal", "ell", "llo", "alo", "lo"]
-    strings = ["".join([node.value for node in triple if node]) for triple in graph.triples()]
+    strings = [
+        "".join([node.value for node in triple if node]) for triple in graph.triples()
+    ]
     assert sorted(canonical) == sorted(strings)
 
 
@@ -128,8 +130,10 @@ def test_triples_empty_edges():
     graph = Graph()
     pronunciations = [list("wat"), list("what")]
     graph.attach(pronunciations)
-    canonical = ['wa', 'wh', 'wha', 'wat', 'hat', 'at']
-    strings = ["".join([node.value for node in triple if node]) for triple in graph.triples()]
+    canonical = ["wa", "wh", "wha", "wat", "hat", "at"]
+    strings = [
+        "".join([node.value for node in triple if node]) for triple in graph.triples()
+    ]
     assert sorted(canonical) == sorted(strings)
 
 

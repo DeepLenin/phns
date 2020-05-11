@@ -28,7 +28,7 @@ def test_closest_no_tail():
         "deletes": [(3, "o")],
         "inserts": [],
         "replaces": [(1, "o")],
-        "target": ["h", "e", "l", "o"]
+        "target": ["h", "e", "l", "o"],
     }
     assert_closest(result, meta)
 
@@ -43,7 +43,7 @@ def test_closest_no_longer_tail():
         "deletes": [(3, "o"), (4, "u")],
         "inserts": [],
         "replaces": [(1, "o")],
-        "target": ["h", "e", "l", "o", "u"]
+        "target": ["h", "e", "l", "o", "u"],
     }
     assert_closest(result, meta)
 
@@ -58,7 +58,7 @@ def test_closest_no_root():
         "deletes": [(0, "w")],
         "inserts": [],
         "replaces": [],
-        "target": ["w", "a", "t"]
+        "target": ["w", "a", "t"],
     }
     assert_closest(result, meta)
 

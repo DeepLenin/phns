@@ -18,7 +18,7 @@ RULES = {
     "assimilate_coalescence": {
         (Phn("t"), Phn("y")): Phn("ch"),  # last year
         (Phn("d"), Phn("y")): Phn("jh"),  # would you
-    }
+    },
 }
 
 
@@ -55,9 +55,11 @@ def apply(graph):
                 if current.value == Phn("ah") and not current.value.stress:
                     new_triples += graph.create_edge(before, after)
 
-                if current.value.val in {"t", "d"} and \
-                   before.value.val in ARPABET_CONSONANTS and \
-                   after.value.val in ARPABET_CONSONANTS:
+                if (
+                    current.value.val in {"t", "d"}
+                    and before.value.val in ARPABET_CONSONANTS
+                    and after.value.val in ARPABET_CONSONANTS
+                ):
                     new_triples += graph.create_edge(before, after)
 
         triples = new_triples
