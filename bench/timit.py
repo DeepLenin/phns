@@ -1,7 +1,7 @@
 import os
 import pickle
-import numpy as np
 
+import numpy as np
 from tqdm import tqdm
 
 import phns
@@ -67,20 +67,22 @@ for item in tqdm(data):
             cers.append(result["cer"])
         else:
             skipped += 1
-    except:
+    except Exception as err:
         import ipdb
+
         ipdb.set_trace()
         graph = phns.from_text(item["text"], apply_heuristics=True)
         phns.closest(_phns, graph)
-        raise
-
+        raise err
 
 
 print("skipped: ", skipped)
 print(cers)
-print({
-    '25%': np.percentile(cers, 25),
-    '50%': np.percentile(cers, 50),
-    '75%': np.percentile(cers, 75),
-    '95%': np.percentile(cers, 95)
-})
+print(
+    {
+        "25%": np.percentile(cers, 25),
+        "50%": np.percentile(cers, 50),
+        "75%": np.percentile(cers, 75),
+        "95%": np.percentile(cers, 95),
+    }
+)
