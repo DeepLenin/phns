@@ -1,5 +1,5 @@
 from .utils.cmu import Phn
-from .utils.mapper import ARPABET_CONSONANTS
+from .utils.mapper import ARPABET_CONSONANTS, ARPABET_VOWELS
 
 RULES = {
     "assimilate_last": {
@@ -61,6 +61,25 @@ def apply(graph):
                     and after.value.val in ARPABET_CONSONANTS
                 ):
                     new_triples += graph.create_edge(before, after)
+
+                if (
+                    before.value.val == "ah"
+                    and current.value.val == "v"
+                    and after.value.val in ARPABET_CONSONANTS
+                ):
+                    new_triples += graph.create_edge(before, after)
+
+                if (
+                    current.value.val in ("ay", "ey", "iy", "oy")
+                    and after.value.val in ARPABET_VOWELS
+                ):
+                    new_triples += graph.create_node_between(Phn("y"), current, after)
+
+                if (
+                    current.value.val in ("uw", "aw", "ow", "uh")
+                    and after.value.val in ARPABET_VOWELS
+                ):
+                    new_triples += graph.create_node_between(Phn("w"), current, after)
 
         triples = new_triples
 

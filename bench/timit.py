@@ -65,6 +65,16 @@ for item in tqdm(data):
         if graph:
             result = phns.closest(_phns, graph)
             cers.append(result["cer"])
+            if result["cer"] > 0.2:
+                print(item["text"])
+                print("phns", item["phns"])
+                print("_phns", [phn.val for phn in _phns])
+                print("targt", [phn.val for phn in result["target"]])
+                print("match", [graph.nodes[m].value.val for m in result["match"]])
+                print(result)
+                import ipdb
+
+                ipdb.set_trace()
         else:
             skipped += 1
     except Exception as err:

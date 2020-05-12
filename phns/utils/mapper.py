@@ -119,6 +119,10 @@ ARPABET_CONSONANTS = {
     "b", "ch", "d", "dh", "dx", "el", "em", "en", "f", "g", "hh", "jh", "k", "l", "m",
     "n", "ng", "n", "p", "q", "r", "s", "sh", "t", "th", "v", "w", "wh", "y", "z", "zh"
 }
+
+ARPABET_VOWELS = {
+    "aa", "ae", "ah", "ao", "aw", "ay", "eh", "er", "ey", "ih", "iy", "ow", "oy", "uh", "uw"
+}
 # fmt: off
 
 
