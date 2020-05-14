@@ -65,7 +65,7 @@ for item in tqdm(data):
         if graph:
             result = phns.closest(_phns, graph)
             cers.append(result["cer"])
-            if result["cer"] > 0.2:
+            if result["cer"] > 0.2 and False:
                 print(item["text"])
                 print("phns", item["phns"])
                 print("_phns", [phn.val for phn in _phns])
@@ -87,7 +87,6 @@ for item in tqdm(data):
 
 
 print("skipped: ", skipped)
-print(cers)
 print(
     {
         "25%": np.percentile(cers, 25),

@@ -1,52 +1,9 @@
+import itertools
 import os
 
-
-class Phn:
-    PHONEMES = {}
-
-    def __new__(cls, val):
-        if isinstance(val, Phn):
-            return val
-        _phn = val.lower().replace("0", "")
-        if _phn not in cls.PHONEMES:
-            instance = super(Phn, cls).__new__(cls)
-            instance.__custom_init__(_phn)
-            cls.PHONEMES[_phn] = instance
-        return cls.PHONEMES[_phn]
-
-    def __custom_init__(self, phoneme):
-        self.__phoneme__ = phoneme
-        self.val, self.stress = self.process()
-
-    def process(self):
-        """Splits cmu dict phoneme to phoneme and stress"""
-        digit = None
-        no_digits = []
-        for char in self.__phoneme__.lower():
-            if char.isdigit():
-                digit = int(char)
-            else:
-                no_digits.append(char)
-        return "".join(no_digits), digit
-
-    def __hash__(self):
-        return hash(self.val)
-
-    def __eq__(self, other):
-        return other and self.val == other.val
-
-    def __lt__(self, other):
-        return self.val < other.val
-
-    def __str__(self):
-        return self.val
-
-    def __repr__(self):
-        return f'Phn("{self.__phoneme__}")'
-
-    def __deepcopy__(self, memo={}):
-        return self
-
+from . import contractions
+from .list_ext import flatten
+from .phn import Phn
 
 CMU_PATH = os.path.dirname(os.path.realpath(__file__))
 CMU_PATH += "/../vendor/cmudict/cmudict.dict"
@@ -63,3 +20,13 @@ for line in open(CMU_PATH).readlines():
     else:
         if transcription not in CMU[word]:
             CMU[word].append(transcription)
+
+for contraction, bag_of_words in contractions.FROM_CONTRACTIONS.items():
+    if contraction not in CMU:
+        raise f"CMU is missing word: {contraction}"
+    for words in bag_of_words:
+        transcriptions = itertools.product(*[CMU[word] for word in words])
+        for transcription in transcriptions:
+            transcription = flatten(transcription)
+            if transcription not in CMU[contraction]:
+                CMU[contraction].append(transcription)

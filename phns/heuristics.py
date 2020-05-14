@@ -111,10 +111,10 @@ def apply(graph):
                 ):
                     new_triples += graph.create_node_between(Phn("w"), current, after)
 
-                for ph1, ph2 in RULES["confusion"]:
-                    if current.value.val in (ph1.val, ph2.val):
-                        new_phn = ph1 if current.value.val == ph2.val else ph2
-                        graph.create_node_between(new_phn, before, after)
+                # for ph1, ph2 in RULES["confusion"]:
+                #     if current.value.val in (ph1.val, ph2.val):
+                #         new_phn = ph1 if current.value.val == ph2.val else ph2
+                #         graph.create_node_between(new_phn, before, after)
 
         triples = new_triples
 
