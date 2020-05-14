@@ -19,6 +19,36 @@ RULES = {
         (Phn("t"), Phn("y")): Phn("ch"),  # last year
         (Phn("d"), Phn("y")): Phn("jh"),  # would you
     },
+    "confusion": {
+        # Vowels
+        (Phn("eh"), Phn("ih")),
+        (Phn("eh"), Phn("ae")),
+        (Phn("iy"), Phn("ey")),
+        (Phn("uh"), Phn("er")),
+        (Phn("ah"), Phn("eh")),
+        (Phn("ow"), Phn("uh")),
+        (Phn("ah"), Phn("uh")),
+        (Phn("uh"), Phn("uw")),
+        (Phn("aa"), Phn("ae")),
+        # Consonants
+        (Phn("t"), Phn("p")),
+        (Phn("k"), Phn("p")),
+        (Phn("d"), Phn("g")),
+        (Phn("d"), Phn("b")),
+        (Phn("th"), Phn("f")),
+        (Phn("s"), Phn("f")),
+        (Phn("v"), Phn("b")),
+        (Phn("dh"), Phn("b")),
+        (Phn("dh"), Phn("d")),
+        (Phn("dh"), Phn("g")),
+        (Phn("dh"), Phn("th")),
+        (Phn("z"), Phn("s")),
+        (Phn("z"), Phn("v")),
+        (Phn("z"), Phn("dh")),
+        (Phn("l"), Phn("m")),
+        (Phn("l"), Phn("n")),
+        (Phn("l"), Phn("r")),
+    },
 }
 
 
@@ -80,6 +110,11 @@ def apply(graph):
                     and after.value.val in ARPABET_VOWELS
                 ):
                     new_triples += graph.create_node_between(Phn("w"), current, after)
+
+                for ph1, ph2 in RULES["confusion"]:
+                    if current.value.val in (ph1.val, ph2.val):
+                        new_phn = ph1 if current.value.val == ph2.val else ph2
+                        graph.create_node_between(new_phn, before, after)
 
         triples = new_triples
 
