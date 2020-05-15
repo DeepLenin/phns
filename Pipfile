@@ -7,8 +7,9 @@ verify_ssl = true
 pytest = "*"
 black = "*"
 flake8 = "*"
-isort = {git = "https://github.com/timothycrosley/isort.git", editable = true, ref = "master"}
+isort = {git = "https://github.com/timothycrosley/isort.git",editable = true,ref = "master"}
 tqdm = "*"
+importlib-metadata = "*"
 
 [packages]
 numpy = "==1.18.4"
