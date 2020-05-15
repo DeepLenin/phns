@@ -115,6 +115,7 @@ def closest(phns, graph):
             meta["errors"] -= 1
 
     meta["cer"] = meta["errors"] / len(meta["target"])
+    meta["cmu_cer"] = meta["errors"] / graph.max_length
     return meta
 
 

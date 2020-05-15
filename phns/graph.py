@@ -39,6 +39,7 @@ class Graph:
         self.roots = []
         self.tails = []
         self.nodes = []
+        self.max_length = 0
         self._shortest_paths = None
         self._distance_matrix = None
         self._transition_matrix = None
@@ -92,6 +93,7 @@ class Graph:
         return self._final_transitions
 
     def attach(self, pronunciations):
+        self.max_length += max([len(p) for p in pronunciations])
         if len(pronunciations) > 1:
             # h e l l o
             # h e w l o

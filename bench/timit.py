@@ -50,6 +50,7 @@ with open(DATA_PATH + "timit_bench.pkl", "rb") as f:
 #    ]
 
 cers = []
+cers_no_contractions = []
 skipped = 0
 for item in tqdm(data):
     # Preprocessing data
@@ -61,10 +62,10 @@ for item in tqdm(data):
     # TODO: Run bench
 
     try:
-        graph = phns.from_text(item["text"], apply_heuristics=True)
+        graph = phns.from_text(item["text"])
         if graph:
             result = phns.closest(_phns, graph)
-            cers.append(result["cer"])
+            cers.append(result["cmu_cer"])
             if result["cer"] > 0.2 and False:
                 print(item["text"])
                 print("phns", item["phns"])
@@ -93,5 +94,6 @@ print(
         "50%": np.percentile(cers, 50),
         "75%": np.percentile(cers, 75),
         "95%": np.percentile(cers, 95),
+        "mean": np.mean(cers),
     }
 )

@@ -21,7 +21,12 @@ def __split__(text):
     )
 
 
-def from_text(text, missing_handler=lambda _: False, apply_heuristics=True):
+def from_text(
+    text,
+    missing_handler=lambda _: False,
+    apply_heuristics=True,
+    apply_contractions=True,
+):
     words = __split__(text)
 
     if not callable(missing_handler):
@@ -35,11 +40,12 @@ def from_text(text, missing_handler=lambda _: False, apply_heuristics=True):
         word = words[word_idx]
         next_word = (word_idx + 1) < len(words) and words[word_idx + 1]
 
-        contracted_word = contractions.encode(word, next_word)
-        if contracted_word:
-            # skip next word
-            next(iterator)
-            word = contracted_word
+        if apply_contractions:
+            contracted_word = contractions.encode(word, next_word)
+            if contracted_word:
+                # skip next word
+                next(iterator)
+                word = contracted_word
 
         transcription = deepcopy(CMU.get(word)) or deep_phn(missing_handler(word))
         if transcription:
