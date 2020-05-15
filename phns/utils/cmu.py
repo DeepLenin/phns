@@ -23,7 +23,7 @@ for line in open(CMU_PATH).readlines():
 
 for contraction, bag_of_words in contractions.FROM_CONTRACTIONS.items():
     if contraction not in CMU:
-        raise f"CMU is missing word: {contraction}"
+        raise Exception(f"CMU is missing word: {contraction}")
     for words in bag_of_words:
         transcriptions = itertools.product(*[CMU[word] for word in words])
         for transcription in transcriptions:

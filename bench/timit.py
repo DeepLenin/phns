@@ -62,7 +62,7 @@ for item in tqdm(data):
     # TODO: Run bench
 
     try:
-        graph = phns.from_text(item["text"])
+        graph = phns.from_text(item["text"], apply_confusion=True)
         if graph:
             result = phns.closest(_phns, graph)
             cers.append(result["cmu_cer"])

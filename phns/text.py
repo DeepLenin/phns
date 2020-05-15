@@ -26,6 +26,7 @@ def from_text(
     missing_handler=lambda _: False,
     apply_heuristics=True,
     apply_contractions=True,
+    apply_confusion=False,
 ):
     words = __split__(text)
 
@@ -55,5 +56,5 @@ def from_text(
 
     if not skip:
         if apply_heuristics:
-            graph = heuristics.apply(graph)
+            graph = heuristics.apply(graph, confusion=apply_confusion)
         return graph
