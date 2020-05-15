@@ -119,5 +119,4 @@ def apply(graph, confusion=False):
 
         triples = new_triples
 
-    graph.to_graphviz().view()
     return graph
