@@ -17,6 +17,7 @@ def __split__(text):
         .replace('"', "")
         .replace("!", "")
         .replace("-", " ")
+        .replace("&", " and ")
         .split()
     )
 
@@ -36,17 +37,22 @@ def from_text(
     skip = False
     graph = Graph()
 
+    appostrophs = set()
     iterator = iter(range(len(words)))
     for word_idx in iterator:
         word = words[word_idx]
-        next_word = (word_idx + 1) < len(words) and words[word_idx + 1]
+        if "'" in word:
+            appostrophs.add(word)
 
         if apply_contractions:
-            contracted_word = contractions.encode(word, next_word)
+            contracted_word, to_skip = contractions.encode(word_idx, words)
             if contracted_word:
-                # skip next word
-                next(iterator)
+                # skip next `to_skip` word
+                for _ in range(to_skip):
+                    next(iterator)
                 word = contracted_word
+        else:
+            word = words[word_idx]
 
         transcription = deepcopy(CMU.get(word)) or deep_phn(missing_handler(word))
         if transcription:
@@ -57,4 +63,6 @@ def from_text(
     if not skip:
         if apply_heuristics:
             graph = heuristics.apply(graph, confusion=apply_confusion)
-        return graph
+        return graph, appostrophs
+    else:
+        return None, appostrophs

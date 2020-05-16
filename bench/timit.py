@@ -52,6 +52,7 @@ with open(DATA_PATH + "timit_bench.pkl", "rb") as f:
 cers = []
 cers_no_contractions = []
 skipped = 0
+apps = set()
 for item in tqdm(data):
     # Preprocessing data
     _phns = phns.utils.timit_to_cmu(item["phns"])
@@ -62,7 +63,8 @@ for item in tqdm(data):
     # TODO: Run bench
 
     try:
-        graph = phns.from_text(item["text"], apply_confusion=True)
+        graph, _apps = phns.from_text(item["text"])
+        apps.update(_apps)
         if graph:
             result = phns.closest(_phns, graph)
             cers.append(result["cmu_cer"])
@@ -85,6 +87,7 @@ for item in tqdm(data):
         graph = phns.from_text(item["text"], apply_heuristics=True)
         phns.closest(_phns, graph)
         raise err
+print(apps)
 
 
 print("skipped: ", skipped)

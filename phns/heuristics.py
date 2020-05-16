@@ -19,6 +19,8 @@ RULES = {
         (Phn("t"), Phn("y")): Phn("ch"),  # last year
         (Phn("d"), Phn("y")): Phn("jh"),  # would you
     },
+    # TODO: Remove not so often happened confusions
+    # https://web.archive.org/web/20151003175728/http://www.tc.umn.edu/~munso005/ConfusionMatrices.pdf
     "confusion": {
         # Vowels
         (Phn("eh"), Phn("ih")),
