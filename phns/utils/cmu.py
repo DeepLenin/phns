@@ -1,8 +1,5 @@
-import itertools
 import os
 
-from . import contractions
-from .list_ext import flatten
 from .phn import Phn
 
 CMU_PATH = os.path.dirname(os.path.realpath(__file__))
@@ -12,21 +9,19 @@ CMU = {}
 for line in open(CMU_PATH).readlines():
     parts = line.strip().split(" ")
     word = parts[0]
-    transcription = [Phn(phn) for phn in parts[1:]]
+    transcription = (Phn(phn) for phn in parts[1:])
     if "(" in word:
         word = word.split("(")[0]
-    if word not in CMU:
-        CMU[word] = [transcription]
-    else:
-        if transcription not in CMU[word]:
-            CMU[word].append(transcription)
+    CMU.setdefault(word, set()).add(transcription)
 
-for contraction, bag_of_words in contractions.FROM_CONTRACTIONS.items():
-    if contraction not in CMU:
-        raise Exception(f"CMU is missing word: {contraction}")
-    for words in bag_of_words:
-        transcriptions = itertools.product(*[CMU[word] for word in words])
-        for transcription in transcriptions:
-            transcription = flatten(transcription)
-            if transcription not in CMU[contraction]:
-                CMU[contraction].append(transcription)
+ALIASES = {
+    "them": "'em",
+    "about": "'bout",
+    "because": "'cause",
+    "okay": "'kay",
+    "ok": "okay",
+    "until": "'til",
+}
+for original, alias in ALIASES.items():
+    union = CMU[original].union(CMU[alias])
+    CMU[original] = CMU[alias] = union

@@ -1,92 +1,15 @@
-import itertools
+"""
+Сочетания модификаторов:
+    - "to be" + not
+    - "to have" + not
+    - "to do" + not
+    - can + not
+    - will + not
+    - shall + not
+    - modal verbs + [have, not, not + have]
+"""
 
-TO_CONTRACTIONS = {
-    ("i", "am"): "i'm",
-    ("i", "had"): "i'd",
-    ("i", "would"): "i'd",
-    ("i", "should"): "i'd",
-    ("i", "could"): "i'd",
-    ("i", "will"): "i'll",
-    ("i", "have"): "i've",
-    ("you", "are"): "you're",
-    ("you", "were"): "you're",
-    ("you", "had"): "you'd",
-    ("you", "would"): "you'd",
-    ("you", "could"): "you'd",
-    ("you", "should"): "you'd",
-    ("you", "will"): "you'll",
-    ("you", "have"): "you've",
-    ("he", "is"): "he's",
-    ("he", "was"): "he's",
-    ("he", "has"): "he's",
-    ("he", "had"): "he'd",
-    ("he", "would"): "he'd",
-    ("he", "could"): "he'd",
-    ("he", "should"): "he'd",
-    ("he", "will"): "he'll",
-    ("she", "is"): "she's",
-    ("she", "has"): "she's",
-    ("she", "was"): "she's",
-    ("she", "had"): "she'd",
-    ("she", "would"): "she'd",
-    ("she", "could"): "she'd",
-    ("she", "should"): "she'd",
-    ("she", "will"): "she'll",
-    ("it", "is"): "it's",
-    ("it", "has"): "it's",
-    ("it", "was"): "it's",
-    ("it", "would"): "it'd",
-    ("it", "could"): "it'd",
-    ("it", "should"): "it'd",
-    ("it", "will"): "it'll",
-    ("we", "are"): "we're",
-    ("we", "were"): "we're",
-    ("we", "had"): "we'd",
-    ("we", "should"): "we'd",
-    ("we", "could"): "we'd",
-    ("we", "would"): "we'd",
-    ("we", "will"): "we'll",
-    ("we", "have"): "we've",
-    ("they", "are"): "they're",
-    ("they", "were"): "they're",
-    ("they", "had"): "they'd",
-    ("they", "would"): "they'd",
-    ("they", "could"): "they'd",
-    ("they", "should"): "they'd",
-    ("they", "will"): "they'll",
-    ("they", "have"): "they've",
-    ("there", "is"): "there's",
-    ("there", "has"): "there's",
-    ("there", "was"): "there's",
-    ("there", "will"): "there'll",
-    ("there", "had"): "there'd",
-    ("there", "would"): "there'd",
-    ("there", "could"): "there'd",
-    ("there", "should"): "there'd",
-    ("is", "not"): "isn't",
-    ("are", "not"): "aren't",
-    ("do", "not"): "don't",
-    ("does", "not"): "doesn't",
-    ("was", "not"): "wasn't",
-    ("were", "not"): "weren't",
-    ("did", "not"): "didn't",
-    ("have", "not"): "haven't",
-    ("has", "not"): "hasn't",
-    ("will", "not"): "won't",
-    ("had", "not"): "hadn't",
-    ("can", "not"): "can't",
-    ("could", "not"): "couldn't",
-    ("must", "not"): "mustn't",
-    ("might", "not"): "mightn't",
-    ("need", "not"): "needn't",
-    ("should", "not"): "shouldn't",
-    ("ought", "not"): "oughtn't",
-    ("would", "not"): "wouldn't",
-    ("what", "is"): "what's",
-    ("how", "is"): "how's",
-    ("where", "is"): "where's",
-}
-
+MODAL_VERBS = ["could", "should", "would", "ought", "might", "must", "need"]
 MODIFIERS = {
     "am",
     "is",
@@ -107,32 +30,29 @@ MODIFIERS = {
     "should",
     "not",
 }
-
-FROM_CONTRACTIONS = {}
-for words, contraction in TO_CONTRACTIONS.items():
-    FROM_CONTRACTIONS.setdefault(contraction, []).append(words)
+ALIASES = {
+    ("let", "us"): "let's",
+    ("of", "course"): "'course",
+    ("it", "was"): "'twas",
+    ("it", "is"): "'tis",
+}
 
 
 def encode(word_idx, sentence):
     word1 = sentence[word_idx].lower()
 
     if "'" in word1:
-        # TODO: decode can return different modifiers: I'd -> would, could ...
-        # word1, mod = decode(word1)
-        # modifiers = [None, mod]
-        modifiers = [None]
-    else:
-        modifiers = [None]
+        return word1, 0
 
+    modifiers = [word1]
     for word in sentence[word_idx + 1 :]:
         word = word.lower()
-        if word in MODIFIERS and compatible(modifiers, word):
+        if word in MODIFIERS and __compatible__(modifiers, word):
             modifiers.append(word)
         else:
+            if len(modifiers) == 1 and ALIASES.get((word1, word)):
+                modifiers.append(word)
             break
-
-    modifiers.pop(0)
-    modifiers = [word1] + modifiers
 
     return "^".join(modifiers), len(modifiers) - 1
 
@@ -140,72 +60,146 @@ def encode(word_idx, sentence):
 def decode(word):
     modifiers = word.split("^")
 
-    variants = []
+    variants = [modifiers]
     mod_len = len(modifiers)
-    for mod_idx in range(mod_len):
-        mod1 = modifiers[mod_idx]
-        mod2 = None
-        mod3 = None
 
-        if mod_idx < mod_len - 1:
-            mod2 = modifiers[mod_idx + 1]
-            if mod_idx < mod_len - 2:
-                mod3 = modifiers[mod_idx + 2]
+    alias = ALIASES.get((modifiers[0], modifiers[1]))
+    if alias:
+        variants.append([alias, *modifiers[2:]])
 
-        if mod2 and compatible(mod1, mod2):
-            variants.append((mod_idx, mod_idx + 1))
-            if mod3 and compatible([mod1, mod2], mod3):
-                variants.append((mod_idx, mod_idx + 1, mod_idx + 2))
-    variants = itertools.product(*[[None, variant] for variant in variants])
-    filtered = []
-    for variant in variants:
-        var = [it for it in variant if it]
-        compressed = compress(modifiers, var)
-        if compressed:
-            filtered.append(compressed)
-
-    return filtered
-
-
-def compress(modifiers, compressions):
-    prev = None
-    for current in reversed(sorted(compressions)):
-        if prev and prev[0] > current[-1]:
-            # Similar to compatible
-
-            prev = current
+    if mod_len == 2:
+        word1, word2 = modifiers
+        if word1 in MODAL_VERBS:
+            if word2 == "not":
+                variants.append([word1 + "n't"])
+            elif word2 == "have":
+                variants.append([word1 + "'ve"])
+            else:
+                raise ValueError(modifiers)
+        elif word1 in MODIFIERS:
+            if word2 == "not":
+                if word1 in ["was", "were", "had", "do", "did", "does"]:
+                    variants.append([word1 + "n't"])
+                elif word1 == "shall":
+                    variants.append(["shan't"])
+                elif word1 == "will":
+                    variants.append(["won't"])
+                elif word1 == "can":
+                    variants += [["can't"], ["cannot"]]
+                elif word1 in ("am", "is", "are", "has", "have"):
+                    if word1 != "am":
+                        variants.append([word1 + "n't"])
+                    variants.append(["ain't"])
+                elif word1 == "dare":
+                    variants.append(["daren't"])
+                else:
+                    raise ValueError(modifiers)
         else:
-            return
+            if word2 == "am":
+                if word1 == "i":
+                    variants.append(["i'm"])
+                else:
+                    raise ValueError(modifiers)
+            elif word2 in ["is", "has", "does", "was"]:
+                variants.append([word1 + "'s"])
+            elif word2 in ["are", "were"]:
+                variants.append([word1 + "'re"])
+            elif word2 in ["have"]:
+                variants.append([word1 + "'ve"])
+            elif word2 in ["will", "shall"]:
+                variants.append([word1 + "'ll"])
+            elif word2 in ["had", "did", "could", "would", "should"]:
+                variants.append([word1 + "'d"])
+            elif word2 in ["do", "can"]:
+                pass
+            elif not alias:
+                raise ValueError(modifiers)
+    elif mod_len == 3:
+        word1, word2, word3 = modifiers
+        if word2 in MODAL_VERBS and word3 == "have":
+            if word2 in ["should", "would", "could"]:
+                variants.append([word1 + "'d", word3])
+            variants.append([word1, word2 + "'ve"])
+        elif word3 == "not":
+            if word2 in ("am", "is", "are", "has", "have"):
+                variants.append([word1, "ain't"])
+            if (
+                word2
+                in [
+                    "is",
+                    "are",
+                    "were",
+                    "was",
+                    "have",
+                    "has",
+                    "had",
+                    "do",
+                    "did",
+                    "does",
+                ]
+                + MODAL_VERBS
+            ):
+                variants.append([word1, word2 + "n't"])
+            elif word2 == "can":
+                variants += [[word1, "can't"], [word1, "cannot"]]
+            elif word2 == "will":
+                variants.append([word1, "won't"])
+            elif word2 == "shall":
+                variants.append([word1, "shan't"])
+            else:
+                raise ValueError(modifiers)
+
+            if word2 == "am":
+                if word1 == "i":
+                    variants.append(["i'm", word3])
+                else:
+                    raise ValueError(modifiers)
+            elif word2 in ["is", "has", "does", "was"]:
+                variants.append([word1 + "'s", word3])
+            elif word2 in ["are", "were"]:
+                variants.append([word1 + "'re", word3])
+            elif word2 in ["have"]:
+                variants.append([word1 + "'ve", word3])
+            elif word2 in ["will", "shall"]:
+                variants.append([word1 + "'ll", word3])
+            elif word2 in ["had", "did", "could", "would", "should"]:
+                variants.append([word1 + "'d", word3])
+            elif word2 in ["do", "can"]:
+                pass
+            else:
+                raise ValueError(modifiers)
+        else:
+            raise ValueError(modifiers)
+    elif mod_len == 4:
+        word1, word2, word3, word4 = modifiers
+        if word2 in MODAL_VERBS and word3 == "not" and word4 == "have":
+            if word2 in ["should", "would", "could"]:
+                variants.append([word1 + "'d", word3, word4])
+            variants += [[word1, word2 + "n't", word4], [word1, word2 + "n't've"]]
+        else:
+            raise ValueError(modifiers)
+    else:
+        raise ValueError(modifiers)
+    return variants
 
 
-def compatible(modifiers, modifier):
-    """
-    word, word, word, current, word1, word2
-    1. Сurrent - обычное слово. Смотрим вперед до следующего не-модификатора.
-        И создаем перебор всех комбинаций последовательных модификаторов не длиней 3
-    2. Current - уже контракшн - мы должны декодировать чтоб понять можно ли
-        его еще модифицировать (при декодировании получим модификатор и проверим
-        можно ли его модифицировать)
+def __compatible__(modifiers, modifier):
+    not_modifier = modifier == "not"
 
-    Модификаторы:
-        - "to be" (am, is, are, was, were)
-        - "to have" (have, has, had)
-        - "to do" (do, does, did)
-        - can
-        - could
-        - will
-        - would
-        - shall
-        - should
-        - not
-    Сочетания модификаторов:
-        - "to be" + not
-        - "to have" + not
-        - "to do" + not
-        - can + not
-        - will + not
-        - shall + not
-        - could + [have, not, not + have]
-        - would + [have, not, not + have]
-        - should + [have, not, not + have]
-    """
+    if len(modifiers) == 1 and modifiers[0] not in MODIFIERS:
+        return not (not_modifier)
+
+    if not_modifier:
+        return True
+
+    if modifier == "have":
+        if modifiers[-1] in MODAL_VERBS:
+            return True
+        if (
+            modifiers[-1] == "not"
+            and len(modifiers) > 1
+            and modifiers[-2] in MODAL_VERBS
+        ):
+            return True
+
+    return False
