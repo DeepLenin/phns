@@ -5,7 +5,7 @@ from phns.utils import deep_str
 def test_from_text_single_word():
     res = from_text("hello", apply_heuristics=False).to_list()
     assert len(res) == 2
-    assert deep_str(res[0]) == ["hh", "ah", "l", "ow"]
+    assert ["hh", "eh", "l", "ow"] in deep_str(res)
 
 
 def test_from_text_multiple_words():

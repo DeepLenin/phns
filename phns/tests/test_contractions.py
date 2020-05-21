@@ -1,3 +1,5 @@
+import pytest
+
 from phns.utils.contractions import decode, encode
 
 
@@ -23,14 +25,7 @@ def assert_decoded(examples, expected):
 def test_encode_simple():
     s = "I am living because my soul is not dying do not presume"
     assert_each_encoded_position(
-        s,
-        [
-            ("i^am", 1),
-            ("soul^is^not", 2),
-            ("is^not", 1),
-            ("dying^do^not", 2),
-            ("do^not", 1),
-        ],
+        s, [("i^am", 1), ("soul^is^not", 2), ("is^not", 1), ("do^not", 1),],
     )
 
 
@@ -63,8 +58,9 @@ def test_encode_big_stuff():
 
 def test_decode_simple():
     assert_decoded(
-        ["i^am", "soul^is^not", "is^not", "dying^do^not", "do^not"],
+        ["that^is", "i^am", "soul^is^not", "is^not", "dying^do^not", "do^not"],
         [
+            [["that", "is"], ["that's"]],
             [["i", "am"], ["i'm"]],
             [
                 ["soul", "is", "not"],
@@ -96,5 +92,21 @@ def test_decode_alias():
     )
 
 
-# TODO: check raise if incorrect word is passed to decode
-# TODO: check complex phrases with decode
+def test_decode_incorrect():
+    for example in ["let^uo", "you^am", "writers^do", "you^will^not^have"]:
+        with pytest.raises(ValueError):
+            decode(example)
+
+
+def test_decode_complex():
+    assert_decoded(
+        ["alex^would^not^have"],
+        [
+            [
+                ["alex", "would", "not", "have"],
+                ["alex'd", "not", "have"],
+                ["alex", "wouldn't", "have"],
+                ["alex", "wouldn't've"],
+            ]
+        ],
+    )

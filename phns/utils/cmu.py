@@ -9,7 +9,7 @@ CMU = {}
 for line in open(CMU_PATH).readlines():
     parts = line.strip().split(" ")
     word = parts[0]
-    transcription = (Phn(phn) for phn in parts[1:])
+    transcription = tuple([Phn(phn) for phn in parts[1:]])
     if "(" in word:
         word = word.split("(")[0]
     CMU.setdefault(word, set()).add(transcription)

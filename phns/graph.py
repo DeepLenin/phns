@@ -94,6 +94,7 @@ class Graph:
 
     def attach(self, pronunciations):
         self.max_length += max([len(p) for p in pronunciations])
+        first_pronunciation = list(pronunciations)[0]
         if len(pronunciations) > 1:
             # h e l l o
             # h e w l o
@@ -112,7 +113,7 @@ class Graph:
             i_diff_reverse = -__find_index_of_first_diff__(reversed_pronunciations) - 1
 
             for i in range(i_diff_forward):
-                self.tails = [self.__add_phn__(pronunciations[0][i])]
+                self.tails = [self.__add_phn__(first_pronunciation[i])]
 
             new_tails = []
 
@@ -138,9 +139,9 @@ class Graph:
             self.tails = new_tails
 
             for i in range(i_diff_reverse + 1, 0):
-                self.tails = [self.__add_phn__(pronunciations[0][i])]
+                self.tails = [self.__add_phn__(first_pronunciation[i])]
         else:
-            for phn in pronunciations[0]:
+            for phn in first_pronunciation:
                 self.tails = [self.__add_phn__(phn)]
 
         return self

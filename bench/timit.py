@@ -52,45 +52,33 @@ with open(DATA_PATH + "timit_bench.pkl", "rb") as f:
 cers = []
 cers_no_contractions = []
 skipped = 0
-apps = set()
+missing = set()
 for item in tqdm(data):
     # Preprocessing data
     _phns = phns.utils.timit_to_cmu(item["phns"])
     _phns = [phns.Phn(phn) for phn in _phns if phn != "sil"]
 
-    # TODO: Convert TIMIT 64 to our cmu phonemes
-    # TODO: Think about stressed phonemes - how we compare stressed with nonstressed
-    # TODO: Run bench
+    graph = phns.from_text(item["text"], missing_handler=lambda word: missing.add(word))
+    if graph:
+        result = phns.closest(_phns, graph)
+        cers.append(result["cmu_cer"])
+        if result["cer"] > 0.2 and False:
+            print(item["text"])
+            print("phns", item["phns"])
+            print("_phns", [phn.val for phn in _phns])
+            print("targt", [phn.val for phn in result["target"]])
+            print("match", [graph.nodes[m].value.val for m in result["match"]])
+            print(result)
+            import ipdb
 
-    try:
-        graph, _apps = phns.from_text(item["text"])
-        apps.update(_apps)
-        if graph:
-            result = phns.closest(_phns, graph)
-            cers.append(result["cmu_cer"])
-            if result["cer"] > 0.2 and False:
-                print(item["text"])
-                print("phns", item["phns"])
-                print("_phns", [phn.val for phn in _phns])
-                print("targt", [phn.val for phn in result["target"]])
-                print("match", [graph.nodes[m].value.val for m in result["match"]])
-                print(result)
-                import ipdb
-
-                ipdb.set_trace()
-        else:
-            skipped += 1
-    except Exception as err:
-        import ipdb
-
-        ipdb.set_trace()
-        graph = phns.from_text(item["text"], apply_heuristics=True)
-        phns.closest(_phns, graph)
-        raise err
-print(apps)
+            ipdb.set_trace()
+    else:
+        skipped += 1
 
 
 print("skipped: ", skipped)
+print("missing: ", len(missing))
+print(missing)
 print(
     {
         "25%": np.percentile(cers, 25),
