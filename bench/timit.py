@@ -58,7 +58,11 @@ for item in tqdm(data):
     _phns = phns.utils.timit_to_cmu(item["phns"])
     _phns = [phns.Phn(phn) for phn in _phns if phn != "sil"]
 
-    graph = phns.from_text(item["text"], missing_handler=lambda word: missing.add(word))
+    graph = phns.from_text(
+        item["text"],
+        missing_handler=lambda word: missing.add(word),
+        apply_confusion=True,
+    )
     if graph:
         result = phns.closest(_phns, graph)
         cers.append(result["cmu_cer"])

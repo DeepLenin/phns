@@ -76,6 +76,7 @@ def decode(word):
             if word1 in ["was", "were", "had", "do", "did", "does"]:
                 variants.append([word1 + "n't"])
             elif word1 == "shall":
+                # TODO: there is no shan't in CMU dict
                 variants.append(["shan't"])
             elif word1 == "will":
                 variants.append(["won't"])
