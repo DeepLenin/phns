@@ -62,12 +62,12 @@ for item in tqdm(data):
     graph = phns.from_text(
         item["text"],
         missing_handler=lambda word: missing.add(word),
-        # apply_confusion=True,
+        apply_confusion=True,
     )
     if graph:
         result = phns.closest(_phns, graph)
         cers.append(result["cmu_cer"])
-        if result["cer"] > 0.2 and False:
+        if result["cmu_cer"] > 0.3 and False:
             print(item["text"])
             print("phns", item["phns"])
             print("_phns", [phn.val for phn in _phns])

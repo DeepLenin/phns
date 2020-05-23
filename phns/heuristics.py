@@ -133,7 +133,7 @@ def apply(graph, confusion=False):
                         after,
                         meta={
                             "heuristic": "consequent_vowels_y",
-                            "vals": (current.value, after.value),
+                            "vals": (current.value.val, after.value.val),
                         },
                     )
 
@@ -147,7 +147,7 @@ def apply(graph, confusion=False):
                         after,
                         meta={
                             "heuristic": "consequent_vowels_w",
-                            "vals": (current.value, after.value),
+                            "vals": (current.value.val, after.value.val),
                         },
                     )
 
@@ -161,7 +161,7 @@ def apply(graph, confusion=False):
                                 after,
                                 meta={
                                     "heuristic": "confusion",
-                                    "vals": (current.value, new_phn.value),
+                                    "vals": (current.value.val, new_phn.val),
                                 },
                             )
 

@@ -178,11 +178,23 @@ class Graph:
 
         dot = graphviz.Digraph()
         for node in self.nodes:
-            dot.node(str(id(node)), str(node.value))
+            if "heuristic" in node.meta:
+                dot.attr("node", shape="doubleoctagon", color="lightblue2")
+                dot.node(str(id(node)), str(node.value))  # + f"\n{node.meta}")
+            else:
+                dot.attr("node", shape="ellipse")
+                dot.node(str(id(node)), str(node.value))
 
         for node in self.nodes:
             for edge in node.out_edges:
-                dot.edge(str(id(node)), str(id(edge.to_node)))
+                if edge.meta:
+                    dot.edge(
+                        str(id(node)),
+                        str(id(edge.to_node)),
+                        label=edge.meta["heuristic"],
+                    )
+                else:
+                    dot.edge(str(id(node)), str(id(edge.to_node)))
         return dot
 
     def to_list(self):
@@ -220,13 +232,13 @@ class Graph:
             triples = []
             if to_node.out_nodes:
                 for node in to_node.out_nodes:
-                    triples += self.create_edge(from_node, node)
+                    triples += self.create_edge(from_node, node, meta)
             elif from_node.in_nodes:
                 for node in from_node.in_nodes:
-                    triples += self.create_edge(node, to_node)
+                    triples += self.create_edge(node, to_node, meta)
             return triples
 
-        Edge(from_node, to_node)
+        Edge(from_node, to_node, meta=meta)
 
         new_triples_before_edge = itertools.product(
             from_node.in_nodes or [None], [from_node], [to_node]
