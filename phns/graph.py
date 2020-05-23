@@ -5,11 +5,12 @@ from scipy.sparse.csgraph import shortest_path
 
 
 class Node:
-    def __init__(self, value, index):
+    def __init__(self, value, index, meta={}):
         self.in_edges = []
         self.out_edges = []
         self.value = value
         self.index = index
+        self.meta = meta
 
     def __repr__(self):
         return f'Node("{self.value}")'
@@ -24,9 +25,10 @@ class Node:
 
 
 class Edge:
-    def __init__(self, from_node, to_node):
+    def __init__(self, from_node, to_node, meta={}):
         self.from_node = from_node
         self.to_node = to_node
+        self.meta = meta
         from_node.out_edges.append(self)
         to_node.in_edges.append(self)
 
@@ -92,9 +94,11 @@ class Graph:
             self._final_transitions = transitions
         return self._final_transitions
 
-    def attach(self, pronunciations):
+    def attach(self, pronunciations, word=None):
         self.max_length += max([len(p) for p in pronunciations])
         first_pronunciation = list(pronunciations)[0]
+        is_dict = isinstance(pronunciations, dict)
+
         if len(pronunciations) > 1:
             # h e l l o
             # h e w l o
@@ -113,7 +117,9 @@ class Graph:
             i_diff_reverse = -__find_index_of_first_diff__(reversed_pronunciations) - 1
 
             for i in range(i_diff_forward):
-                self.tails = [self.__add_phn__(first_pronunciation[i])]
+                self.tails = [
+                    self.__add_phn__(first_pronunciation[i], meta={"word": word})
+                ]
 
             new_tails = []
 
@@ -125,13 +131,17 @@ class Graph:
             for pronunciation in pronunciations:
                 prev_nodes = self.tails
 
+                meta = {"word": word}
+                if is_dict:
+                    meta["variant"] = pronunciations[pronunciation]
+
                 for phn in pronunciation[i_diff_forward:i_diff_reverse]:
-                    node = self.__add_phn__(phn, prev_nodes)
+                    node = self.__add_phn__(phn, prev_nodes, meta=meta)
                     prev_nodes = [node]
 
                 if len(pronunciation) - i_diff_forward >= -i_diff_reverse:
                     phn = pronunciation[i_diff_reverse]
-                    node = self.__add_phn__(phn, prev_nodes)
+                    node = self.__add_phn__(phn, prev_nodes, meta=meta)
                     prev_nodes = [node]
 
                 new_tails.extend(prev_nodes)
@@ -139,20 +149,22 @@ class Graph:
             self.tails = new_tails
 
             for i in range(i_diff_reverse + 1, 0):
-                self.tails = [self.__add_phn__(first_pronunciation[i])]
+                self.tails = [
+                    self.__add_phn__(first_pronunciation[i], meta={"word": word})
+                ]
         else:
             for phn in first_pronunciation:
-                self.tails = [self.__add_phn__(phn)]
+                self.tails = [self.__add_phn__(phn, meta={"word": word})]
 
         return self
 
-    def __create_node__(self, phn):
-        node = Node(phn, len(self.nodes))
+    def __create_node__(self, phn, meta):
+        node = Node(phn, len(self.nodes), meta=meta)
         self.nodes.append(node)
         return node
 
-    def __add_phn__(self, phn, prev_nodes=None):
-        node = self.__create_node__(phn)
+    def __add_phn__(self, phn, prev_nodes=None, meta={}):
+        node = self.__create_node__(phn, meta=meta)
         if not self.tails and not prev_nodes:
             self.roots.append(node)
         if prev_nodes is None:
@@ -200,7 +212,7 @@ class Graph:
             node.in_nodes or [None], [node], node.out_nodes or [None]
         )
 
-    def create_edge(self, from_node, to_node):
+    def create_edge(self, from_node, to_node, meta={}):
         if to_node in from_node.out_nodes:
             return []
 
@@ -225,11 +237,11 @@ class Graph:
 
         return list(new_triples_before_edge) + list(new_triples_after_edge)
 
-    def create_node_between(self, phn, from_node, to_node):
+    def create_node_between(self, phn, from_node, to_node, meta={}):
         if to_node and to_node.value == phn:
             return self.create_edge(from_node, to_node)
 
-        node = self.__create_node__(phn)
+        node = self.__create_node__(phn, meta=meta)
         new_triples = self.create_edge(from_node, node)
         if to_node:
             new_triples += self.create_edge(node, to_node)

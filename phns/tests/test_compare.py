@@ -18,7 +18,7 @@ def check_closest(phns, pronunciations, expected_meta):
 
 def test_to_emissions():
     graph = Graph()
-    pronunciations = [list("wat"), list("what")]
+    pronunciations = {tuple("wat"): 1, tuple("what"): 2}
     graph.attach(pronunciations)
     emissions = to_emissions(list("wot"), graph)
     canonical = [[1, 0.5, 0.5, 0.5], [0.5, 0.5, 0.5, 0.5], [0.5, 0.5, 0.5, 1]]
@@ -27,7 +27,7 @@ def test_to_emissions():
 
 def test_closest_no_tail():
     phns = ["h", "o", "l"]
-    pronunciations = [list("helo"), list("halo")]
+    pronunciations = {tuple("helo"): 1, tuple("halo"): 2}
     check_closest(
         phns,
         pronunciations,
@@ -42,7 +42,7 @@ def test_closest_no_tail():
 
 def test_closest_no_longer_tail():
     phns = ["h", "o", "l"]
-    pronunciations = [list("helou"), list("halou")]
+    pronunciations = {tuple("helou"): 1, tuple("halou"): 2}
     check_closest(
         phns,
         pronunciations,
@@ -57,7 +57,7 @@ def test_closest_no_longer_tail():
 
 def test_closest_no_root():
     phns = ["a", "t"]
-    pronunciations = [list("what"), list("wat")]
+    pronunciations = {tuple("what"): 1, tuple("wat"): 2}
     check_closest(
         phns,
         pronunciations,
@@ -72,7 +72,7 @@ def test_closest_no_root():
 
 def test_closest_with_gap_in_middle():
     phns = list("hu")
-    pronunciations = [list("helou"), list("halou")]
+    pronunciations = {tuple("helou"): 1, tuple("halou"): 2}
     check_closest(
         phns,
         pronunciations,
@@ -80,7 +80,7 @@ def test_closest_with_gap_in_middle():
             "deletes": {1: "e", 2: "l", 3: "o"},
             "inserts": {},
             "replaces": {},
-            "target": pronunciations[0],
+            "target": ["h", "e", "l", "o", "u"],
         },
     )
 

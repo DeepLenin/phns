@@ -25,7 +25,7 @@ def assert_decoded(examples, expected):
 def test_encode_simple():
     s = "I am living because my soul is not dying do not presume"
     assert_each_encoded_position(
-        s, [("i^am", 1), ("soul^is^not", 2), ("is^not", 1), ("do^not", 1),],
+        s, [("i^am", 1), ("soul^is^not", 2), ("is^not", 1), ("do^not", 1)],
     )
 
 

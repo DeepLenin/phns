@@ -16,11 +16,13 @@ with open(DATA_PATH + "timit_bench.pkl", "rb") as f:
 # missing words:
 #    exceptions = [
 #        "motorists'",
+#        "somebody'll",
+#        "andrei's",
+#
 #        "morphophonemic",
 #        "nihilistic",
 #        "radiosterilization",
 #        "exhusband",
-#        "somebody'll",
 #        "smolderingly",
 #        "geocentricism",
 #        "unmagnified",
@@ -37,7 +39,6 @@ with open(DATA_PATH + "timit_bench.pkl", "rb") as f:
 #        "unwaveringly",
 #        "cap'n",
 #        "mournfully",
-#        "andrei's",
 #        "autofluorescence",
 #        "fasciculations",
 #        "weatherstrip",
@@ -61,7 +62,7 @@ for item in tqdm(data):
     graph = phns.from_text(
         item["text"],
         missing_handler=lambda word: missing.add(word),
-        apply_confusion=True,
+        # apply_confusion=True,
     )
     if graph:
         result = phns.closest(_phns, graph)
