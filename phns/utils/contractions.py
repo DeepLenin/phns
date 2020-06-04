@@ -108,6 +108,8 @@ def decode(word):
                 variants.append([word1 + "'d"])
             elif not alias:
                 raise ValueError(word)
+    # TODO: she'll've (she will have)
+    # TODO: he'd've (he would have)
     elif mod_len == 3:
         word1, word2, word3 = modifiers
         if word2 in MODAL_VERBS and word3 == "have":

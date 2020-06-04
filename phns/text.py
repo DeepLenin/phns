@@ -47,9 +47,9 @@ def from_text(
                     next(iterator)
                 word = contracted_word
 
-        transcription = transcribe.word(word) or deep_phn(missing_handler(word))
-        if transcription:
-            graph.attach(transcription)
+        transcriptions = transcribe.word(word) or deep_phn(missing_handler(word))
+        if transcriptions:
+            graph.attach(transcriptions, word)
         else:
             skip = True
 

@@ -16,11 +16,13 @@ with open(DATA_PATH + "timit_bench.pkl", "rb") as f:
 # missing words:
 #    exceptions = [
 #        "motorists'",
+#        "somebody'll",
+#        "andrei's",
+#
 #        "morphophonemic",
 #        "nihilistic",
 #        "radiosterilization",
 #        "exhusband",
-#        "somebody'll",
 #        "smolderingly",
 #        "geocentricism",
 #        "unmagnified",
@@ -37,7 +39,6 @@ with open(DATA_PATH + "timit_bench.pkl", "rb") as f:
 #        "unwaveringly",
 #        "cap'n",
 #        "mournfully",
-#        "andrei's",
 #        "autofluorescence",
 #        "fasciculations",
 #        "weatherstrip",
@@ -66,7 +67,7 @@ for item in tqdm(data):
     if graph:
         result = phns.closest(_phns, graph)
         cers.append(result["cmu_cer"])
-        if result["cer"] > 0.2 and False:
+        if result["cmu_cer"] > 0.3 and False:
             print(item["text"])
             print("phns", item["phns"])
             print("_phns", [phn.val for phn in _phns])

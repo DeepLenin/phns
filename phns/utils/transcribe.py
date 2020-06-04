@@ -11,7 +11,7 @@ def word(word):
         return fetch(word)
 
     variants = contractions.decode(word)
-    result = set()
+    result = dict()
     for variant in variants:
         words_transcriptions = []
         skip = False
@@ -25,7 +25,7 @@ def word(word):
         if not skip:
             final_transcriptions = itertools.product(*words_transcriptions)
             for final_transcription in final_transcriptions:
-                result.add(sum(final_transcription, tuple()))
+                result[sum(final_transcription, tuple())] = variant
     return result
 
 
@@ -44,42 +44,28 @@ def fetch(full_word):
         return
 
     if not_part:
-        for transcription in transcriptions:
-            if transcription[-1].val in ARPABET_VOWELS:
-                transcription += (Phn("n"), Phn("t"))
-            else:
-                transcription += (Phn("ah"), Phn("n"), Phn("t"))
+        __push_phonemes__(transcriptions, (Phn("n"), Phn("t")))
 
     # https://www.oxfordonlineenglish.com/english-contractions
     # https://pronunciationstudio.com/contractions/
     if suffix == "'ve":
-        for transcription in transcriptions:
-            if transcription[-1].val in ARPABET_VOWELS:
-                transcription += (Phn("v"),)
-            else:
-                transcription += (Phn("ah"), Phn("v"))
+        __push_phonemes__(transcriptions, (Phn("v"),))
     elif suffix == "'ll":
-        for transcription in transcriptions:
-            if transcription[-1].val in ARPABET_VOWELS:
-                transcription += (Phn("l"),)
-            else:
-                transcription += (Phn("ah"), Phn("l"))
+        __push_phonemes__(transcriptions, (Phn("l"),))
     elif suffix == "'d":
-        for transcription in transcriptions:
-            if transcription[-1].val in ARPABET_VOWELS:
-                transcription += (Phn("d"),)
-            else:
-                transcription += (Phn("ah"), Phn("d"))
-    elif suffix == "'s" or suffix == "'":
+        __push_phonemes__(transcriptions, (Phn("d"),))
+    elif suffix in ["'s", "'"]:
         # https://en.wikipedia.org/wiki/English_possessive (the same rules as for plural and contraction 's)
         for transcription in transcriptions:
             last_phn = transcription[-1].val
             if last_phn in ["s", "z", "sh", "zh", "ch", "jh"]:
                 transcription += (Phn("ih"), Phn("z"))
-            elif last_phn in ["p", "t", "k", "f", "th"]:
-                transcription += (Phn("s"),)
-            else:
-                transcription += (Phn("z"),)
+            # TODO: Когда в конце слова может быть просто отдельный апостроф без продолжения
+            elif suffix != "'":
+                if last_phn in ["p", "t", "k", "f", "th"]:
+                    transcription += (Phn("s"),)
+                else:
+                    transcription += (Phn("z"),)
     elif suffix == "'re":
         for transcription in transcriptions:
             # TODO: if the next word starts with vowel then we need to also add "r"?
@@ -87,3 +73,11 @@ def fetch(full_word):
     else:
         return
     return transcriptions
+
+
+def __push_phonemes__(transcriptions, phonemes):
+    for transcription in transcriptions:
+        if transcription[-1].val in ARPABET_VOWELS:
+            transcription += phonemes
+        else:
+            transcription += (Phn("ah"),) + phonemes

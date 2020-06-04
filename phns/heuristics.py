@@ -77,47 +77,93 @@ def apply(graph, confusion=False):
 
                 phn = RULES["assimilate_last"].get((current.value, after.value))
                 if phn:
-                    new_triples += graph.create_node_between(phn, before, after)
+                    new_triples += graph.create_node_between(
+                        phn,
+                        before,
+                        after,
+                        meta={
+                            "heuristic": "assimilate_last",
+                            "vals": (current.value, after.value),
+                        },
+                    )
 
                 phn = RULES["assimilate_coalescence"].get((current.value, after.value))
                 if phn:
                     for out_node in after.out_nodes or [None]:
-                        new_triples += graph.create_node_between(phn, before, out_node)
+                        new_triples += graph.create_node_between(
+                            phn,
+                            before,
+                            out_node,
+                            meta={
+                                "heuristic": "assimilate_coalescence",
+                                "vals": (current.value, after.value),
+                            },
+                        )
 
                 if current.value == Phn("ah") and not current.value.stress:
-                    new_triples += graph.create_edge(before, after)
+                    new_triples += graph.create_edge(
+                        before, after, meta={"heuristic": "unstressed_ah"}
+                    )
 
                 if (
                     current.value.val in {"t", "d"}
                     and before.value.val in ARPABET_CONSONANTS
                     and after.value.val in ARPABET_CONSONANTS
                 ):
-                    new_triples += graph.create_edge(before, after)
+                    new_triples += graph.create_edge(
+                        before, after, meta={"heuristic": "silent_t_d"}
+                    )
 
                 if (
                     before.value.val == "ah"
                     and current.value.val == "v"
                     and after.value.val in ARPABET_CONSONANTS
                 ):
-                    new_triples += graph.create_edge(before, after)
+                    new_triples += graph.create_edge(
+                        before, after, meta={"heuristic": "silent_v"}
+                    )
 
                 if (
                     current.value.val in ("ay", "ey", "iy", "oy")
                     and after.value.val in ARPABET_VOWELS
                 ):
-                    new_triples += graph.create_node_between(Phn("y"), current, after)
+                    new_triples += graph.create_node_between(
+                        Phn("y"),
+                        current,
+                        after,
+                        meta={
+                            "heuristic": "consequent_vowels_y",
+                            "vals": (current.value.val, after.value.val),
+                        },
+                    )
 
                 if (
                     current.value.val in ("uw", "aw", "ow", "uh")
                     and after.value.val in ARPABET_VOWELS
                 ):
-                    new_triples += graph.create_node_between(Phn("w"), current, after)
+                    new_triples += graph.create_node_between(
+                        Phn("w"),
+                        current,
+                        after,
+                        meta={
+                            "heuristic": "consequent_vowels_w",
+                            "vals": (current.value.val, after.value.val),
+                        },
+                    )
 
                 if confusion:
                     for ph1, ph2 in RULES["confusion"]:
                         if current.value.val in (ph1.val, ph2.val):
                             new_phn = ph1 if current.value.val == ph2.val else ph2
-                            graph.create_node_between(new_phn, before, after)
+                            graph.create_node_between(
+                                new_phn,
+                                before,
+                                after,
+                                meta={
+                                    "heuristic": "confusion",
+                                    "vals": (current.value.val, new_phn.val),
+                                },
+                            )
 
         triples = new_triples
 
