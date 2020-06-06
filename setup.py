@@ -9,6 +9,6 @@ setuptools.setup(
     packages=setuptools.find_packages(),
     install_requires=["scipy"],
     package_data={
-        "phns.vendor": ['*'],
+        "phns": ['vendor/*'],
     }
 )
