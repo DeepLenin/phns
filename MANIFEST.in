@@ -1,1 +1,1 @@
-include phns/vendor/*
+include phns/vendor/cmudict/*
