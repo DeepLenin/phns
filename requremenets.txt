@@ -1,0 +1,4 @@
+-i https://pypi.org/simple
+numpy==1.18.4
+scipy==1.4.1
+git+git://github.com/deeplenin/phns.git#egg=phns
