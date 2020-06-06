@@ -5,6 +5,7 @@ setuptools.setup(
     version="0.0.1",
     author="Deep Lenin",
     description="A small package",
-    packages=["numpy", "scipy"],
     python_requires=">=3.6",
+    packages=setuptools.find_packages(),
+    install_requires=["scipy"],
 )
