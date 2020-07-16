@@ -62,10 +62,13 @@ def traverse_tip(kind, state_index, meta):
 
 
 def closest(phns, graph):
-    emissions = to_emissions(phns, graph)
+    if len(getattr(phns, "shape", [])) == 2:  # if logits (numpy array or torch tensor)
+        emissions = phns.T
+    else:
+        emissions = np.log(to_emissions(phns, graph))
     with np.errstate(divide="ignore"):
         match = viterbi(
-            np.log(emissions),
+            emissions,
             np.log(graph.transition_matrix),
             np.log(graph.initial_transitions),
             np.log(graph.final_transitions),
