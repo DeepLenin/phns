@@ -63,7 +63,7 @@ def traverse_tip(kind, state_index, meta):
 
 def closest(phns, graph):
     if len(getattr(phns, "shape", [])) == 2:  # if logits (numpy array or torch tensor)
-        emissions = phns.T
+        emissions = phns
     else:
         emissions = np.log(to_emissions(phns, graph))
     with np.errstate(divide="ignore"):
