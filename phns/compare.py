@@ -30,10 +30,10 @@ def traverse_shortest_path(kind, from_node_index, to_node_index, meta):
         meta["target"].append(node.value)
 
 
-def add_state(state_index, phn, meta):
+def add_state(state_index, logprobs, argmax_phn, meta):
     state_node = meta["graph"].nodes[state_index]
-    if state_node.value != phn:
-        meta["replaces"][len(meta["target"])] = phn
+    if logprobs[state_index] < meta["threshold"]:
+        meta["replaces"][len(meta["target"])] = argmax_phn
         meta["errors"] += 1
     meta["target"].append(state_node.value)
 
@@ -61,11 +61,15 @@ def traverse_tip(kind, state_index, meta):
         traverse_shortest_path(kind, closest_tip_index, state_index, meta)
 
 
-def closest(phns, graph):
-    if len(getattr(phns, "shape", [])) == 2:  # if logits (numpy array or torch tensor)
-        emissions = phns
+def closest(phns, graph, tensor_dict=None, threshold=1):
+    threshold = np.log(threshold)
+    if tensor_dict:  # logits with dimensions TxD (time step X dict)
+        emissions = tensor_to_emissions(phns, graph, tensor_dict)
+        # may be use not an argmax but taking into account previous immediate error
+        # so we can compare to use with threshold
+        phns = [tensor_dict.id_to_phn[code] for code in graph.argmax(dim=1)]
     else:
-        emissions = np.log(to_emissions(phns, graph))
+        emissions = np.log(phns_to_emissions(phns, graph))
     with np.errstate(divide="ignore"):
         match = viterbi(
             emissions,
@@ -84,16 +88,17 @@ def closest(phns, graph):
         "phns": phns,
         "match": match,
         "graph": graph,
+        "threshold": threshold,
     }
 
     traverse_tip("root", match[0], meta)
-    add_state(match[0], phns[0], meta)
+    add_state(match[0], emissions[0], phns[0], meta)
 
     for prev_phn_index in range(len(phns) - 1):
         orig_phn_index = prev_phn_index + 1
 
         if match[prev_phn_index] == match[orig_phn_index]:
-            if graph.nodes[match[orig_phn_index]].value != phns[orig_phn_index]:
+            if emissions[match[orig_phn_index]] < meta["threshold"]:
                 meta["inserts"].setdefault(len(meta["target"]), []).append(
                     phns[orig_phn_index]
                 )
@@ -104,7 +109,12 @@ def closest(phns, graph):
                 traverse_shortest_path(
                     "normal", match[prev_phn_index], match[orig_phn_index], meta
                 )
-            add_state(match[orig_phn_index], phns[orig_phn_index], meta)
+            add_state(
+                match[orig_phn_index],
+                emissions[orig_phn_index],
+                phns[orig_phn_index],
+                meta,
+            )
 
     traverse_tip("tail", match[-1], meta)
 
@@ -122,8 +132,16 @@ def closest(phns, graph):
     return meta
 
 
+def tensor_to_emissions(tensor, graph, tensor_dict):
+    # ignore blanks cause phonemes can't have repetitions
+    emissions = np.empty((tensor.shape[0], len(graph.nodes)), tensor.dtype)
+    for i, node in enumerate(graph.nodes):
+        emissions[:, i] = tensor[:, tensor_dict.phn_to_id[node.value.val]]
+    return emissions
+
+
 # TODO: Move to graph modules
-def to_emissions(phns, graph):
+def phns_to_emissions(phns, graph):
     emissions = np.full((len(phns), len(graph.nodes)), 0.5)
 
     indexes = {}

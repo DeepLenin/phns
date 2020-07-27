@@ -1,6 +1,6 @@
 import numpy as np
 
-from phns.compare import closest, to_emissions
+from phns.compare import closest, phns_to_emissions
 from phns.graph import Graph
 
 
@@ -16,11 +16,11 @@ def check_closest(phns, pronunciations, expected_meta):
     assert_closest(expected_meta, meta)
 
 
-def test_to_emissions():
+def test_phns_to_emissions():
     graph = Graph()
     pronunciations = {tuple("wat"): 1, tuple("what"): 2}
     graph.attach(pronunciations)
-    emissions = to_emissions(list("wot"), graph)
+    emissions = phns_to_emissions(list("wot"), graph)
     canonical = [[1, 0.5, 0.5, 0.5], [0.5, 0.5, 0.5, 0.5], [0.5, 0.5, 0.5, 1]]
     np.testing.assert_equal(canonical, emissions)
 
