@@ -3,7 +3,125 @@ import numpy as np
 from .utils.viterbi import viterbi
 
 
-def traverse_shortest_path(kind, from_node_index, to_node_index, meta):
+def closest(phns, graph, tensor_dict=None, threshold=1):
+    """Finding closest target path in all available variants by provided logprobs or spoken phonemes
+
+    Method does following:
+
+    - Translate input (logprobs or phonemes) to emissions matrix
+    - Run viterbi on emissions
+    - Traverse through all pronounced phonemes by user to check their correctness
+    - Find error rate
+
+    Args:
+        phns (np.array|List[String]): Logprobs matrix or spoken phonemes list
+        graph (phns.Graph): Graph with all variants of target pronounciation
+        tensor_dict (phns.utils.Dictionary): Object with phonemes mapping information
+        threshold (float): Value from 0 to 1. Using to check if matched phoneme
+            higher than this threshold to find errors
+
+    Returns:
+        meta (dict):
+            - "inserts": extra phoneme errors
+            - "deletes": missed phoneme errors
+            - "replaces": combo of extra and missed phoneme error on same position
+            - "target": matched target
+            - "errors": amount of errors
+            - "match": output of viterbi algorithm
+            - "phns": input arg "phns"
+            - "graph": input arg "graph"
+            - "threshold": input arg "threshold"
+            - "cer": error rate (total errors/matched target length)
+            - "cmu_cer": error rate (total errors/graph length)
+    """
+
+    # Translate input (logprobs or phonemes) to emissions matrix
+    threshold = np.log(threshold)
+    if tensor_dict:  # logits with dimensions TxD (time step X dict)
+        emissions = __tensor_to_emissions__(phns, graph, tensor_dict)
+        # may be use not an argmax but taking into account previous immediate error
+        # so we can compare to use with threshold
+        phns = [tensor_dict.id_to_phn[code] for code in graph.argmax(dim=1)]
+    else:
+        emissions = np.log(__phns_to_emissions__(phns, graph))
+
+    # Run viterbi on emissions
+    with np.errstate(divide="ignore"):
+        match = viterbi(
+            emissions,
+            np.log(graph.transition_matrix),
+            np.log(graph.initial_transitions),
+            np.log(graph.final_transitions),
+        )
+
+    meta = {
+        "inserts": {},
+        "deletes": {},
+        "replaces": {},
+        "target": [],
+        "errors": 0,
+        # Debug
+        "phns": phns,
+        "match": match,
+        "graph": graph,
+        "threshold": threshold,
+    }
+
+    # Check if person started not from beginning, adding all missed steps to errors and target
+    __traverse_tip__("root", match[0], meta)
+    # Check correctness of first matched state
+    __add_state__(match[0], emissions[0], phns[0], meta)
+
+    # Traverse through all pronounced phonemes by user to check their correctness
+    for prev_phn_index in range(len(phns) - 1):
+        orig_phn_index = prev_phn_index + 1
+
+        # If same phoneme as in previous step matched - then user made a mistake
+        # Add it to "inserts" errors and we're staying on same step
+        if match[prev_phn_index] == match[orig_phn_index]:
+            if emissions[match[orig_phn_index]] < meta["threshold"]:
+                meta["inserts"].setdefault(len(meta["target"]), []).append(
+                    phns[orig_phn_index]
+                )
+                meta["errors"] += 1
+
+        else:
+            # If distance from prev phoneme to current more than one through
+            # graph - we need to find shortest path and add extra phonemes in
+            # it to errors
+            if graph.distance_matrix[match[prev_phn_index], match[orig_phn_index]] != 1:
+                __traverse_shortest_path__(
+                    "normal", match[prev_phn_index], match[orig_phn_index], meta
+                )
+            # Add state for current phoneme
+            __add_state__(
+                match[orig_phn_index],
+                emissions[orig_phn_index],
+                phns[orig_phn_index],
+                meta,
+            )
+
+    # Check if user pronounced all needed phonemes by traversing (finding
+    # shortest path) to tail from last match
+    __traverse_tip__("tail", match[-1], meta)
+
+    del meta["graph"]
+
+    # Replace contiguous "deletes" and "inserts" errors into "replaces"
+    for idx in meta["inserts"]:
+        if idx in meta["deletes"]:
+            del meta["deletes"][idx]
+            phn = meta["inserts"][idx].pop()
+            meta["replaces"][idx] = phn
+            meta["errors"] -= 1
+
+    # Find error rate
+    meta["cer"] = meta["errors"] / len(meta["target"])
+    meta["cmu_cer"] = meta["errors"] / graph.max_length
+    return meta
+
+
+def __traverse_shortest_path__(kind, from_node_index, to_node_index, meta):
     graph = meta["graph"]
     start = graph.nodes[from_node_index]
     end = graph.nodes[to_node_index]
@@ -30,7 +148,7 @@ def traverse_shortest_path(kind, from_node_index, to_node_index, meta):
         meta["target"].append(node.value)
 
 
-def add_state(state_index, logprobs, argmax_phn, meta):
+def __add_state__(state_index, logprobs, argmax_phn, meta):
     state_node = meta["graph"].nodes[state_index]
     if logprobs[state_index] < meta["threshold"]:
         meta["replaces"][len(meta["target"])] = argmax_phn
@@ -38,7 +156,7 @@ def add_state(state_index, logprobs, argmax_phn, meta):
     meta["target"].append(state_node.value)
 
 
-def traverse_tip(kind, state_index, meta):
+def __traverse_tip__(kind, state_index, meta):
     if kind == "tail":
         tip_indexes = [tail.index for tail in meta["graph"].tails]
     else:
@@ -58,81 +176,10 @@ def traverse_tip(kind, state_index, meta):
                 closest_tip_index = tip_index
                 tip_distance = new_distance
 
-        traverse_shortest_path(kind, closest_tip_index, state_index, meta)
+        __traverse_shortest_path__(kind, closest_tip_index, state_index, meta)
 
 
-def closest(phns, graph, tensor_dict=None, threshold=1):
-    threshold = np.log(threshold)
-    if tensor_dict:  # logits with dimensions TxD (time step X dict)
-        emissions = tensor_to_emissions(phns, graph, tensor_dict)
-        # may be use not an argmax but taking into account previous immediate error
-        # so we can compare to use with threshold
-        phns = [tensor_dict.id_to_phn[code] for code in graph.argmax(dim=1)]
-    else:
-        emissions = np.log(phns_to_emissions(phns, graph))
-    with np.errstate(divide="ignore"):
-        match = viterbi(
-            emissions,
-            np.log(graph.transition_matrix),
-            np.log(graph.initial_transitions),
-            np.log(graph.final_transitions),
-        )
-
-    meta = {
-        "inserts": {},
-        "deletes": {},
-        "replaces": {},
-        "target": [],
-        "errors": 0,
-        # Debug
-        "phns": phns,
-        "match": match,
-        "graph": graph,
-        "threshold": threshold,
-    }
-
-    traverse_tip("root", match[0], meta)
-    add_state(match[0], emissions[0], phns[0], meta)
-
-    for prev_phn_index in range(len(phns) - 1):
-        orig_phn_index = prev_phn_index + 1
-
-        if match[prev_phn_index] == match[orig_phn_index]:
-            if emissions[match[orig_phn_index]] < meta["threshold"]:
-                meta["inserts"].setdefault(len(meta["target"]), []).append(
-                    phns[orig_phn_index]
-                )
-                meta["errors"] += 1
-
-        else:
-            if graph.distance_matrix[match[prev_phn_index], match[orig_phn_index]] != 1:
-                traverse_shortest_path(
-                    "normal", match[prev_phn_index], match[orig_phn_index], meta
-                )
-            add_state(
-                match[orig_phn_index],
-                emissions[orig_phn_index],
-                phns[orig_phn_index],
-                meta,
-            )
-
-    traverse_tip("tail", match[-1], meta)
-
-    del meta["graph"]
-
-    for idx in meta["inserts"]:
-        if idx in meta["deletes"]:
-            del meta["deletes"][idx]
-            phn = meta["inserts"][idx].pop()
-            meta["replaces"][idx] = phn
-            meta["errors"] -= 1
-
-    meta["cer"] = meta["errors"] / len(meta["target"])
-    meta["cmu_cer"] = meta["errors"] / graph.max_length
-    return meta
-
-
-def tensor_to_emissions(tensor, graph, tensor_dict):
+def __tensor_to_emissions__(tensor, graph, tensor_dict):
     # ignore blanks cause phonemes can't have repetitions
     emissions = np.empty((tensor.shape[0], len(graph.nodes)), tensor.dtype)
     for i, node in enumerate(graph.nodes):
@@ -141,7 +188,7 @@ def tensor_to_emissions(tensor, graph, tensor_dict):
 
 
 # TODO: Move to graph modules
-def phns_to_emissions(phns, graph):
+def __phns_to_emissions__(phns, graph):
     emissions = np.full((len(phns), len(graph.nodes)), 0.5)
 
     indexes = {}

@@ -1,5 +1,23 @@
 # flake8: noqa
 
+
+class Dictionary:
+    """Wrapper on phonemes dictionary
+
+    Provides simple interface on list of phonemes to translate them from/to ids
+
+    Attributes:
+        all_phns (List[str]): List of phonemes to map into dictionaries
+        blank (Boolean): Take into account special blank phoneme (for CTC) or not
+    """
+
+    def __init__(self, all_phns, blank=True):
+        start_from = 1 if blank else 0
+        self.phn_to_id = {phn: idx + start_from for idx, phn in enumerate(all_phns)}
+        self.id_to_phn = {idx: phn for phn, idx in self.phn_to_id.items()}
+        self.total = len(self.phn_to_id) + start_from
+
+
 # fmt: off
 TIMIT_TO_CMU = {
     "aa":   "aa",

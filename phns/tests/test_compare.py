@@ -1,6 +1,4 @@
-import numpy as np
-
-from phns.compare import closest, phns_to_emissions
+from phns.compare import closest
 from phns.graph import Graph
 
 
@@ -14,15 +12,6 @@ def check_closest(phns, pronunciations, expected_meta):
     graph.attach(pronunciations)
     meta = closest(phns, graph)
     assert_closest(expected_meta, meta)
-
-
-def test_phns_to_emissions():
-    graph = Graph()
-    pronunciations = {tuple("wat"): 1, tuple("what"): 2}
-    graph.attach(pronunciations)
-    emissions = phns_to_emissions(list("wot"), graph)
-    canonical = [[1, 0.5, 0.5, 0.5], [0.5, 0.5, 0.5, 0.5], [0.5, 0.5, 0.5, 1]]
-    np.testing.assert_equal(canonical, emissions)
 
 
 def test_closest_no_tail():
@@ -83,62 +72,3 @@ def test_closest_with_gap_in_middle():
             "target": ["h", "e", "l", "o", "u"],
         },
     )
-
-
-# TODO: Adapt with new API
-"""
-def test_compare_add():
-    return
-    phns1 = ["a", "b", "c"]
-    phns2 = ["a", "b", "c", "d"]
-    res = compare(phns1, phns2)
-    assert res["cer"] == 1 / len(phns1)
-    assert res["distance"] == 1
-
-
-def test_compare_del():
-    return
-    phns1 = ["a", "b", "c"]
-    phns2 = ["a", "b"]
-    res = compare(phns1, phns2)
-    assert res["cer"] == 1 / len(phns1)
-    assert res["distance"] == 1
-
-
-def test_compare_rep():
-    return
-    phns1 = ["a", "b", "c"]
-    phns2 = ["a", "x", "c"]
-    res = compare(phns1, phns2)
-    assert res["cer"] == 1 / len(phns1)
-    assert res["distance"] == 1
-
-
-def test_compare_sublist_del():
-    return
-    phns1 = ["a", "b", "c"]
-    phns2 = [["a", "b"], ["c", "d"]]
-    res = compare(phns1, phns2)
-    assert res["cer"] == 1 / len(phns1)
-    assert res["distance"] == 1
-
-
-def test_closest():
-    return
-    phns = ["a", "b", "c"]
-    variants = [["a", "b", "c", "d", "e"], ["a", "b"]]
-    res = closest(phns, variants)
-    assert res["cer"] == 1 / len(phns)
-    assert res["distance"] == 1
-    assert res["phns"] == ["a", "b"]
-
-
-def test_closest_equal():
-    return
-    phns = ["a", "b", "c"]
-    variants = [["a", "b", "c", "d"], ["a", "b"]]
-    res = closest(phns, variants)
-    assert res["cer"] == 1 / len(phns)
-    assert res["distance"] == 1
-    assert res["phns"] == ["a", "b", "c", "d"]
-"""
