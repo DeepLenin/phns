@@ -79,7 +79,9 @@ def closest(phns, graph, tensor_dict=None, threshold=1):
         # If same phoneme as in previous step matched - then user made a mistake
         # Add it to "inserts" errors and we're staying on same step
         if match[prev_phn_index] == match[orig_phn_index]:
-            if emissions[match[orig_phn_index]] < meta["threshold"]:
+            if emissions[orig_phn_index][match[orig_phn_index]].item() < meta[
+                "threshold"
+            ] and phns[orig_phn_index] != str(graph.nodes[match[orig_phn_index]].value):
                 meta["inserts"].setdefault(len(meta["target"]), []).append(
                     phns[orig_phn_index]
                 )
@@ -150,7 +152,9 @@ def __traverse_shortest_path__(kind, from_node_index, to_node_index, meta):
 
 def __add_state__(state_index, logprobs, argmax_phn, meta):
     state_node = meta["graph"].nodes[state_index]
-    if logprobs[state_index] < meta["threshold"]:
+    if logprobs[state_index] < meta["threshold"] and argmax_phn != str(
+        state_node.value
+    ):
         meta["replaces"][len(meta["target"])] = argmax_phn
         meta["errors"] += 1
     meta["target"].append(state_node.value)
