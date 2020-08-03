@@ -41,7 +41,7 @@ def closest(phns, graph, tensor_dict=None, threshold=1):
         emissions = __tensor_to_emissions__(phns, graph, tensor_dict)
         # may be use not an argmax but taking into account previous immediate error
         # so we can compare to use with threshold
-        phns = [tensor_dict.id_to_phn[code] for code in graph.argmax(dim=1)]
+        phns = [tensor_dict.id_to_phn[code] for code in phns.argmax(dim=1)]
     else:
         emissions = np.log(__phns_to_emissions__(phns, graph))
 
@@ -183,7 +183,7 @@ def __tensor_to_emissions__(tensor, graph, tensor_dict):
     # ignore blanks cause phonemes can't have repetitions
     emissions = np.empty((tensor.shape[0], len(graph.nodes)), tensor.dtype)
     for i, node in enumerate(graph.nodes):
-        emissions[:, i] = tensor[:, tensor_dict.phn_to_id[node.value.val]]
+        emissions[:, i] = tensor[:, tensor_dict.phn_to_id[str(node.value)]]
     return emissions
 
 
