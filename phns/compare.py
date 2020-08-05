@@ -41,11 +41,7 @@ def closest(phns, graph, tensor_dict=None, threshold=1):
         emissions = __tensor_to_emissions__(phns, graph, tensor_dict)
         # may be use not an argmax but taking into account previous immediate error
         # so we can compare to use with threshold
-
-
-        # TODO: Fix hack with `if code` - it's only for situation when we have
-        # blanks on index 0 in our logprobs
-        phns = [tensor_dict.id_to_phn[code] for code in phns.argmax(axis=1) if code]
+        phns = [tensor_dict.id_to_phn[code] for code in phns.argmax(axis=1)]
     else:
         emissions = np.log(__phns_to_emissions__(phns, graph))
 
