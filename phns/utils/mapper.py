@@ -8,14 +8,12 @@ class Dictionary:
 
     Attributes:
         all_phns (List[str]): List of phonemes to map into dictionaries
-        blank (Boolean): Take into account special blank phoneme (for CTC) or not
     """
 
-    def __init__(self, all_phns, blank=True):
-        start_from = 1 if blank else 0
-        self.phn_to_id = {phn: idx + start_from for idx, phn in enumerate(all_phns)}
+    def __init__(self, all_phns):
+        self.phn_to_id = {phn: idx for idx, phn in enumerate(all_phns)}
         self.id_to_phn = {idx: phn for phn, idx in self.phn_to_id.items()}
-        self.total = len(self.phn_to_id) + start_from
+        self.total = len(self.phn_to_id)
 
 
 # fmt: off
@@ -179,4 +177,4 @@ def single_char_encode(phns):
     return "".join([ARPABET_TO_ONE_LETTER[str(phn)] for phn in phns])
 
 
-CMU_DICTIONARY = Dictionary(list(set(TIMIT_TO_CMU.values())))
+CMU_DICTIONARY = Dictionary(["BLANK"] + list(set(TIMIT_TO_CMU.values())))
