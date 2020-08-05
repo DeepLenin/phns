@@ -179,4 +179,4 @@ def single_char_encode(phns):
     return "".join([ARPABET_TO_ONE_LETTER[str(phn)] for phn in phns])
 
 
-CMU_DICTIONARY = Dictionary(TIMIT_TO_CMU.values())
+CMU_DICTIONARY = Dictionary(list(set(TIMIT_TO_CMU.values())))
