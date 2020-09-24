@@ -1,4 +1,12 @@
-from phns.utils import single_char_encode, timit_to_cmu
+from phns.utils import CMU_DICTIONARY, single_char_encode, timit_to_cmu
+
+
+def test_cmu_sorted():
+    assert list(CMU_DICTIONARY.phn_to_id.items())[:3] == [
+        ("BLANK", 0),
+        ("aa", 1),
+        ("ae", 2),
+    ]
 
 
 def test_timit_to_cmu():
