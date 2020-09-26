@@ -81,7 +81,9 @@ def closest(phns, graph, tensor_dict=None, threshold=1):
         if match[prev_phn_index] == match[orig_phn_index]:
             if emissions[orig_phn_index][match[orig_phn_index]].item() < meta[
                 "threshold"
-            ] and phns[orig_phn_index] != str(graph.nodes[match[orig_phn_index]].value):
+            ] and str(phns[orig_phn_index]) != str(
+                graph.nodes[match[orig_phn_index]].value
+            ):
                 meta["inserts"].setdefault(len(meta["target"]), []).append(
                     phns[orig_phn_index]
                 )
@@ -152,7 +154,7 @@ def __traverse_shortest_path__(kind, from_node_index, to_node_index, meta):
 
 def __add_state__(state_index, logprobs, argmax_phn, meta):
     state_node = meta["graph"].nodes[state_index]
-    if logprobs[state_index] < meta["threshold"] and argmax_phn != str(
+    if logprobs[state_index] < meta["threshold"] and str(argmax_phn) != str(
         state_node.value
     ):
         meta["replaces"][len(meta["target"])] = argmax_phn
