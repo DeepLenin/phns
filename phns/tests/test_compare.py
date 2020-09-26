@@ -102,7 +102,7 @@ def test_closest_with_gap_in_middle():
 
 
 def test_closest_tensor_hol():
-    tensor_dict = Dictionary(["a", "e", "o", "h", "l"])
+    tensor_dict = Dictionary(["BLANK", "a", "e", "o", "h", "l"])
     pronunciations = {tuple("helo"): 1, tuple("halo"): 2}
     inp = np.log(
         [
@@ -128,7 +128,7 @@ def test_closest_tensor_hol():
 
 
 def test_closest_tensor_hol_with_insufficient_threshold_with_replace():
-    tensor_dict = Dictionary(["a", "e", "o", "h", "l"])
+    tensor_dict = Dictionary(["BLANK", "a", "e", "o", "h", "l"])
     pronunciations = {tuple("helo"): 1, tuple("halo"): 2}
     inp = np.log(
         [
@@ -154,7 +154,7 @@ def test_closest_tensor_hol_with_insufficient_threshold_with_replace():
 
 
 def test_closest_tensor_hha():
-    tensor_dict = Dictionary(["a", "e", "o", "h", "l"])
+    tensor_dict = Dictionary(["BLANK", "a", "e", "o", "h", "l"])
     pronunciations = {tuple("helo"): 1, tuple("halo"): 2}
     inp = np.log(
         [
@@ -180,7 +180,7 @@ def test_closest_tensor_hha():
 
 
 def test_closest_tensor_hha_with_insufficient_threshold_with_insert():
-    tensor_dict = Dictionary(["a", "e", "o", "h", "l"])
+    tensor_dict = Dictionary(["BLANK", "a", "e", "o", "h", "l"])
     pronunciations = {tuple("helo"): 1, tuple("halo"): 2}
     inp = np.log(
         [
@@ -206,7 +206,7 @@ def test_closest_tensor_hha_with_insufficient_threshold_with_insert():
 
 
 def test_closest_tensor_hol_with_sufficient_threshold():
-    tensor_dict = Dictionary(["a", "e", "o", "h", "l"])
+    tensor_dict = Dictionary(["BLANK", "a", "e", "o", "h", "l"])
     pronunciations = {tuple("helo"): 1, tuple("halo"): 2}
     inp = np.log(
         [
@@ -232,7 +232,7 @@ def test_closest_tensor_hol_with_sufficient_threshold():
 
 
 def test_closest_tensor_hol_with_insufficient_threshold():
-    tensor_dict = Dictionary(["a", "e", "o", "h", "l"])
+    tensor_dict = Dictionary(["BLANK", "a", "e", "o", "h", "l"])
     pronunciations = {tuple("helo"): 1, tuple("halo"): 2}
     inp = np.log(
         [
