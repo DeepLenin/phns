@@ -15,6 +15,9 @@ class Dictionary:
         self.id_to_phn = {idx: phn for phn, idx in self.phn_to_id.items()}
         self.total = len(self.phn_to_id)
 
+    def __len__(self):
+        return self.total
+
 
 # fmt: off
 TIMIT_TO_CMU = {
