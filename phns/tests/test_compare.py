@@ -18,11 +18,11 @@ def check_closest_phns(phns, pronunciations, expected_meta):
 
 
 def check_closest_tensor(
-    tensor, tensor_dict, pronunciations, threshold=1, expected_meta={}
+    tensor, tensor_dict, pronunciations, expected_meta={}, **kwargs
 ):
     graph = Graph()
     graph.attach(pronunciations)
-    meta = closest(tensor, graph, tensor_dict=tensor_dict, threshold=threshold)
+    meta = closest(tensor, graph, tensor_dict=tensor_dict, **kwargs)
     assert_closest(expected_meta, meta)
 
 
@@ -117,13 +117,68 @@ def test_closest_tensor_hol():
         inp,
         tensor_dict,
         pronunciations,
-        0.4,
         {
             "deletes": {3: "o"},
             "inserts": {},
             "replaces": {1: "o"},
             "target": ["h", "e", "l", "o"],
         },
+        threshold=0.4,
+    )
+
+
+def test_closest_tensor_hol_with_blank():
+    tensor_dict = Dictionary(["BLANK", "a", "e", "o", "h", "l"])
+    pronunciations = {tuple("helo"): 1, tuple("halo"): 2}
+    inp = np.log(
+        [
+            # blnk, a,   e,   o,   h,   l
+            [0.1, 0.1, 0.1, 0.1, 0.5, 0.1],  # h
+            [0.5, 0.1, 0.1, 0.1, 0.1, 0.1],  # BLANK
+            [0.1, 0.1, 0.1, 0.5, 0.1, 0.1],  # o
+            [0.0, 0.1, 0.1, 0.1, 0.1, 0.6],  # l
+        ]
+    )
+
+    check_closest_tensor(
+        inp,
+        tensor_dict,
+        pronunciations,
+        {
+            "deletes": {3: "o"},
+            "inserts": {},
+            "replaces": {1: "o"},
+            "target": ["h", "e", "l", "o"],
+        },
+        threshold=0.4,
+    )
+
+
+def test_closest_tensor_hol_with_not_ignored_blank():
+    tensor_dict = Dictionary(["BLANK", "a", "e", "o", "h", "l"])
+    pronunciations = {tuple("helo"): 1, tuple("halo"): 2}
+    inp = np.log(
+        [
+            # blnk, a,   e,   o,   h,   l
+            [0.1, 0.1, 0.1, 0.1, 0.5, 0.1],  # h
+            [0.5, 0.1, 0.1, 0.1, 0.1, 0.1],  # BLANK
+            [0.1, 0.1, 0.1, 0.5, 0.1, 0.1],  # o
+            [0.0, 0.1, 0.1, 0.1, 0.1, 0.6],  # l
+        ]
+    )
+
+    check_closest_tensor(
+        inp,
+        tensor_dict,
+        pronunciations,
+        {
+            "deletes": {3: "o"},
+            "inserts": {1: ["BLANK"]},
+            "replaces": {1: "o"},
+            "target": ["h", "e", "l", "o"],
+        },
+        ignore=[],
+        threshold=0.4,
     )
 
 
@@ -143,7 +198,6 @@ def test_closest_tensor_hol_with_insufficient_threshold_with_replace():
         inp,
         tensor_dict,
         pronunciations,
-        1,
         {
             "deletes": {3: "o"},
             "inserts": {},
@@ -169,13 +223,13 @@ def test_closest_tensor_hha():
         inp,
         tensor_dict,
         pronunciations,
-        0.4,
         {
             "deletes": {2: "l", 3: "o"},
             "inserts": {},
             "replaces": {},
             "target": ["h", "a", "l", "o"],
         },
+        threshold=0.4,
     )
 
 
@@ -195,7 +249,6 @@ def test_closest_tensor_hha_with_insufficient_threshold_with_insert():
         inp,
         tensor_dict,
         pronunciations,
-        1,
         {
             "deletes": {2: "l", 3: "o"},
             "inserts": {},
@@ -221,13 +274,13 @@ def test_closest_tensor_hol_with_sufficient_threshold():
         inp,
         tensor_dict,
         pronunciations,
-        0.4,
         {
             "deletes": {3: "o"},
             "inserts": {},
             "replaces": {1: "o"},
             "target": ["h", "e", "l", "o"],
         },
+        threshold=0.4,
     )
 
 
@@ -247,7 +300,6 @@ def test_closest_tensor_hol_with_insufficient_threshold():
         inp,
         tensor_dict,
         pronunciations,
-        1,
         {
             "deletes": {3: "o"},
             "inserts": {},

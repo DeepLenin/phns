@@ -3,7 +3,7 @@ import numpy as np
 from .utils.viterbi import viterbi
 
 
-def closest(phns, graph, tensor_dict=None, threshold=1):
+def closest(phns, graph, tensor_dict=None, threshold=1, ignore=["BLANK", "sil"]):
     """Finding closest target path in all available variants by provided logprobs or spoken phonemes
 
     Method does following:
@@ -17,6 +17,8 @@ def closest(phns, graph, tensor_dict=None, threshold=1):
         phns (np.array|List[String]): Logprobs matrix or spoken phonemes list
         graph (phns.Graph): Graph with all variants of target pronounciation
         tensor_dict (phns.utils.Dictionary): Object with phonemes mapping information
+        ignore (List[String]): List of dictionary values to ignore when calculating errors
+            Defaults to BLANK and sil
         threshold (float): Value from 0 to 1. Using to check if matched phoneme
             higher than this threshold to find errors
 
@@ -31,6 +33,7 @@ def closest(phns, graph, tensor_dict=None, threshold=1):
             - "phns": input arg "phns"
             - "graph": input arg "graph"
             - "threshold": input arg "threshold"
+            - "ignore": input arg "ignore"
             - "cer": error rate (total errors/matched target length)
             - "cmu_cer": error rate (total errors/graph length)
     """
@@ -65,45 +68,34 @@ def closest(phns, graph, tensor_dict=None, threshold=1):
         "match": match,
         "graph": graph,
         "threshold": threshold,
+        "ignore": ignore,
     }
 
     # Check if person started not from beginning, adding all missed steps to errors and target
     __traverse_tip__("root", match[0], meta)
     # Check correctness of first matched state
-    __add_state__(match[0], emissions[0], phns[0], meta)
+    __check_step__(0, emissions, meta, "replaces")
+    __append_step__(0, meta)
 
     # Traverse through all pronounced phonemes by user to check their correctness
     for prev_phn_index in range(len(phns) - 1):
         orig_phn_index = prev_phn_index + 1
 
-        # If same phoneme as in previous step matched - then user made a mistake
-        # Add it to "inserts" errors and we're staying on same step
+        # # If same phoneme as in previous step matched - then user made a mistake
+        # # Add it to "inserts" errors and we're staying on same step
         if match[prev_phn_index] == match[orig_phn_index]:
-            if emissions[orig_phn_index][match[orig_phn_index]].item() < meta[
-                "threshold"
-            ] and str(phns[orig_phn_index]) != str(
-                graph.nodes[match[orig_phn_index]].value
-            ):
-                meta["inserts"].setdefault(len(meta["target"]), []).append(
-                    phns[orig_phn_index]
-                )
-                meta["errors"] += 1
-
+            __check_step__(orig_phn_index, emissions, meta, "inserts")
         else:
             # If distance from prev phoneme to current more than one through
             # graph - we need to find shortest path and add extra phonemes in
             # it to errors
-            if graph.distance_matrix[match[prev_phn_index], match[orig_phn_index]] != 1:
+            if graph.distance_matrix[match[prev_phn_index], match[orig_phn_index]] > 1:
                 __traverse_shortest_path__(
                     "normal", match[prev_phn_index], match[orig_phn_index], meta
                 )
             # Add state for current phoneme
-            __add_state__(
-                match[orig_phn_index],
-                emissions[orig_phn_index],
-                phns[orig_phn_index],
-                meta,
-            )
+            __check_step__(orig_phn_index, emissions, meta, "replaces")
+            __append_step__(orig_phn_index, meta)
 
     # Check if user pronounced all needed phonemes by traversing (finding
     # shortest path) to tail from last match
@@ -152,14 +144,28 @@ def __traverse_shortest_path__(kind, from_node_index, to_node_index, meta):
         meta["target"].append(node.value)
 
 
-def __add_state__(state_index, logprobs, argmax_phn, meta):
+def __append_step__(step_index, meta):
+    state_index = meta["match"][step_index]
     state_node = meta["graph"].nodes[state_index]
-    if logprobs[state_index] < meta["threshold"] and str(argmax_phn) != str(
-        state_node.value
-    ):
-        meta["replaces"][len(meta["target"])] = argmax_phn
-        meta["errors"] += 1
     meta["target"].append(state_node.value)
+
+
+def __check_step__(step_index, emissions, meta, reason):
+    state_index = meta["match"][step_index]
+    argmax_phn = str(meta["phns"][step_index])
+    state_phn = str(meta["graph"].nodes[state_index].value)
+    state_logprob = emissions[step_index][state_index]
+
+    if (
+        state_logprob < meta["threshold"]
+        and argmax_phn != state_phn
+        and argmax_phn not in meta["ignore"]
+    ):
+        if reason == "inserts":
+            meta[reason].setdefault(len(meta["target"]), []).append(argmax_phn)
+        else:
+            meta[reason][len(meta["target"])] = argmax_phn
+        meta["errors"] += 1
 
 
 def __traverse_tip__(kind, state_index, meta):
@@ -186,7 +192,6 @@ def __traverse_tip__(kind, state_index, meta):
 
 
 def __tensor_to_emissions__(tensor, graph, tensor_dict):
-    # ignore blanks cause phonemes can't have repetitions
     emissions = np.empty((tensor.shape[0], len(graph.nodes)), tensor.dtype)
     for i, node in enumerate(graph.nodes):
         emissions[:, i] = tensor[:, tensor_dict.phn_to_id[str(node.value)]]
