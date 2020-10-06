@@ -4,3 +4,4 @@ __pycache__
 *.gv.pdf
 .vscode
 *.egg-info/
+.direnv/
