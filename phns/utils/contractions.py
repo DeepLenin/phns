@@ -142,7 +142,7 @@ def decode(word):
                 variants.append([word1, "won't"])
             elif word2 == "shall":
                 variants.append([word1, "shan't"])
-            else:
+            elif word2 != "am":  # Already handled above
                 raise ValueError(word)
 
             if word2 == "am":

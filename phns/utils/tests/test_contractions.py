@@ -23,16 +23,17 @@ def assert_decoded(examples, expected):
 
 
 def test_encode_simple():
-    s = "I am living because my soul is not dying do not presume"
+    text = "I am living because my soul is not dying do not presume"
     assert_each_encoded_position(
-        s, [("i^am", 1), ("soul^is^not", 2), ("is^not", 1), ("do^not", 1)],
+        text,
+        [("i^am", 1), ("soul^is^not", 2), ("is^not", 1), ("do^not", 1)],
     )
 
 
 def test_encode_with_aliases():
-    s = "let us be it is who it was not of course right man"
+    text = "let us be it is who it was not of course right man"
     assert_each_encoded_position(
-        s,
+        text,
         [
             ("let^us", 1),
             ("it^is", 1),
@@ -44,9 +45,11 @@ def test_encode_with_aliases():
 
 
 def test_encode_big_stuff():
-    s = "alex would not have vscode for now, but I hope it would have changed his heart"
+    text = (
+        "alex would not have vscode for now, but I hope it would have changed his heart"
+    )
     assert_each_encoded_position(
-        s,
+        text,
         [
             ("alex^would^not^have", 3),
             ("would^not^have", 2),
@@ -58,7 +61,15 @@ def test_encode_big_stuff():
 
 def test_decode_simple():
     assert_decoded(
-        ["that^is", "i^am", "soul^is^not", "is^not", "dying^do^not", "do^not"],
+        [
+            "that^is",
+            "i^am",
+            "soul^is^not",
+            "is^not",
+            "dying^do^not",
+            "do^not",
+            "i^am^not",
+        ],
         [
             [["that", "is"], ["that's"]],
             [["i", "am"], ["i'm"]],
@@ -71,6 +82,7 @@ def test_decode_simple():
             [["is", "not"], ["isn't"], ["ain't"]],
             [["dying", "do", "not"], ["dying", "don't"]],
             [["do", "not"], ["don't"]],
+            [["i", "am", "not"], ["i", "ain't"], ["i'm", "not"]],
         ],
     )
 
