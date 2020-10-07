@@ -30,6 +30,15 @@ def test_encode_simple():
     )
 
 
+def test_encode_not_encoddable():
+    # Should not encode `now am`
+    text = "so i lived and now am your tooth thrall well it is the luck of war"
+    assert_each_encoded_position(
+        text,
+        [("it^is", 1)],
+    )
+
+
 def test_encode_with_aliases():
     text = "let us be it is who it was not of course right man"
     assert_each_encoded_position(

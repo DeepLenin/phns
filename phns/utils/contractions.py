@@ -182,6 +182,9 @@ def decode(word):
 def __compatible__(modifiers, modifier):
     not_modifier = modifier == "not"
 
+    if modifier == "am" and modifiers != ["i"]:
+        return False
+
     if len(modifiers) == 1 and modifiers[0] not in MODIFIERS.union({"can", "do"}):
         return not (not_modifier)
 
