@@ -66,7 +66,7 @@ def closest(phns, graph, tensor_dict=None, threshold=1, ignore=["BLANK", "sil"])
         "errors": 0,
         # Debug
         "phns": phns,
-        "match": list(match),
+        "match": match.tolist(),
         "graph": graph,
         "threshold": orig_threshold,
         "ignore": ignore,
