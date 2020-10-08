@@ -39,6 +39,7 @@ def closest(phns, graph, tensor_dict=None, threshold=1, ignore=["BLANK", "sil"])
     """
 
     # Translate input (logprobs or phonemes) to emissions matrix
+    orig_threshold = threshold
     threshold = np.log(threshold)
     if tensor_dict:  # logits with dimensions TxD (time step X dict)
         emissions = __tensor_to_emissions__(phns, graph, tensor_dict)
@@ -67,7 +68,7 @@ def closest(phns, graph, tensor_dict=None, threshold=1, ignore=["BLANK", "sil"])
         "phns": phns,
         "match": match,
         "graph": graph,
-        "threshold": threshold,
+        "threshold": orig_threshold,
         "ignore": ignore,
     }
 
@@ -108,7 +109,7 @@ def closest(phns, graph, tensor_dict=None, threshold=1, ignore=["BLANK", "sil"])
         if idx in meta["deletes"]:
             del meta["deletes"][idx]
             phn = meta["inserts"][idx].pop()
-            meta["replaces"][idx] = phn
+            meta["replaces"][idx] = str(phn)
             meta["errors"] -= 1
 
     # Find error rate
@@ -139,15 +140,15 @@ def __traverse_shortest_path__(kind, from_node_index, to_node_index, meta):
         path.append(end)
 
     for node in path:
-        meta["deletes"][len(meta["target"])] = node.value
+        meta["deletes"][len(meta["target"])] = str(node.value)
         meta["errors"] += 1
-        meta["target"].append(node.value)
+        meta["target"].append(str(node.value))
 
 
 def __append_step__(step_index, meta):
     state_index = meta["match"][step_index]
     state_node = meta["graph"].nodes[state_index]
-    meta["target"].append(state_node.value)
+    meta["target"].append(str(state_node.value))
 
 
 def __check_step__(step_index, emissions, meta, reason):
