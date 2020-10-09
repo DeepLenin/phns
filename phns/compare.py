@@ -39,19 +39,19 @@ def closest(phns, graph, tensor_dict=None, threshold=1, ignore=["BLANK", "sil"])
     """
 
     # Translate input (logprobs or phonemes) to emissions matrix
-    orig_threshold = threshold
-    threshold = np.log(threshold)
+    log_threshold = np.log(threshold)
     if tensor_dict:  # logits with dimensions TxD (time step X dict)
         emissions = __tensor_to_emissions__(phns, graph, tensor_dict)
         # may be use not an argmax but taking into account previous immediate error
         # so we can compare to use with threshold
-        phns = [tensor_dict.id_to_phn[code] for code in phns.argmax(axis=1)]
+        argmax_phns = [tensor_dict.id_to_phn[code] for code in phns.argmax(axis=1)]
     else:
         emissions = np.log(__phns_to_emissions__(phns, graph))
+        argmax_phns = phns
 
     # Run viterbi on emissions
     with np.errstate(divide="ignore"):
-        match = viterbi(
+        raw_match = viterbi(
             emissions,
             np.log(graph.transition_matrix),
             np.log(graph.initial_transitions),
@@ -64,35 +64,41 @@ def closest(phns, graph, tensor_dict=None, threshold=1, ignore=["BLANK", "sil"])
         "replaces": {},
         "target": [],
         "errors": 0,
-        # Debug
-        "phns": phns,
-        "match": match.tolist(),
+        # private
+        "raw_match": raw_match.tolist(),
+        "argmax_phns": argmax_phns,
         "graph": graph,
-        "threshold": orig_threshold,
+        "threshold": threshold,
+        "log_threshold": log_threshold,
         "ignore": ignore,
     }
 
     # Check if person started not from beginning, adding all missed steps to errors and target
-    __traverse_tip__("root", match[0], meta)
+    __traverse_tip__("root", raw_match[0], meta)
     # Check correctness of first matched state
     __check_step__(0, emissions, meta, "replaces")
     __append_step__(0, meta)
 
     # Traverse through all pronounced phonemes by user to check their correctness
-    for prev_phn_index in range(len(phns) - 1):
+    for prev_phn_index in range(len(argmax_phns) - 1):
         orig_phn_index = prev_phn_index + 1
 
         # # If same phoneme as in previous step matched - then user made a mistake
         # # Add it to "inserts" errors and we're staying on same step
-        if match[prev_phn_index] == match[orig_phn_index]:
+        if raw_match[prev_phn_index] == raw_match[orig_phn_index]:
             __check_step__(orig_phn_index, emissions, meta, "inserts")
         else:
             # If distance from prev phoneme to current more than one through
             # graph - we need to find shortest path and add extra phonemes in
             # it to errors
-            if graph.distance_matrix[match[prev_phn_index], match[orig_phn_index]] > 1:
+            if (
+                graph.distance_matrix[
+                    raw_match[prev_phn_index], raw_match[orig_phn_index]
+                ]
+                > 1
+            ):
                 __traverse_shortest_path__(
-                    "normal", match[prev_phn_index], match[orig_phn_index], meta
+                    "normal", raw_match[prev_phn_index], raw_match[orig_phn_index], meta
                 )
             # Add state for current phoneme
             __check_step__(orig_phn_index, emissions, meta, "replaces")
@@ -100,7 +106,7 @@ def closest(phns, graph, tensor_dict=None, threshold=1, ignore=["BLANK", "sil"])
 
     # Check if user pronounced all needed phonemes by traversing (finding
     # shortest path) to tail from last match
-    __traverse_tip__("tail", match[-1], meta)
+    __traverse_tip__("tail", raw_match[-1], meta)
 
     del meta["graph"]
 
@@ -146,19 +152,19 @@ def __traverse_shortest_path__(kind, from_node_index, to_node_index, meta):
 
 
 def __append_step__(step_index, meta):
-    state_index = meta["match"][step_index]
+    state_index = meta["raw_match"][step_index]
     state_node = meta["graph"].nodes[state_index]
     meta["target"].append(str(state_node.value))
 
 
 def __check_step__(step_index, emissions, meta, reason):
-    state_index = meta["match"][step_index]
-    argmax_phn = str(meta["phns"][step_index])
+    state_index = meta["raw_match"][step_index]
+    argmax_phn = str(meta["argmax_phns"][step_index])
     state_phn = str(meta["graph"].nodes[state_index].value)
     state_logprob = emissions[step_index][state_index]
 
     if (
-        state_logprob < meta["threshold"]
+        state_logprob < meta["log_threshold"]
         and argmax_phn != state_phn
         and argmax_phn not in meta["ignore"]
     ):
