@@ -307,3 +307,32 @@ def test_closest_tensor_hol_with_insufficient_threshold():
             "target": ["h", "e", "l", "o"],
         },
     )
+
+
+def test_closest_tensor_():
+    tensor_dict = Dictionary(["BLANK", "a", "e", "o", "h", "l"])
+    pronunciations = {tuple("helo"): 1, tuple("halo"): 2}
+    inp = np.log(
+        [
+            # blnk, a,   e,   o,   h,   l
+            [0, 0, 0, 0.5, 0.4, 0.1],  # error o (cause insufficient threshold for h)
+            [0, 0, 0, 0.5, 0.4, 0.1],  # error o (cause insufficient threshold for h)
+            [0, 0, 0, 0.5, 0.4, 0.1],  # error o (cause insufficient threshold for h)
+            [0.1, 0.5, 0.1, 0.1, 0.1, 0.1],  # a
+            [0.1, 0.1, 0.1, 0.1, 0.1, 0.5],  # l
+            [0.1, 0.1, 0.1, 0.5, 0.1, 0.1],  # o
+        ]
+    )
+
+    check_closest_tensor(
+        inp,
+        tensor_dict,
+        pronunciations,
+        {
+            "deletes": {},
+            "inserts": {},
+            "replaces": {0: "o"},
+            "target": ["h", "a", "l", "o"],
+        },
+        threshold=0.5,
+    )

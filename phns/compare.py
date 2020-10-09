@@ -168,10 +168,22 @@ def __check_step__(step_index, emissions, meta, reason):
         and argmax_phn != state_phn
         and argmax_phn not in meta["ignore"]
     ):
+        target_position = len(meta["target"])
         if reason == "inserts":
-            meta[reason].setdefault(len(meta["target"]), []).append(argmax_phn)
+            inserts = meta[reason].get(target_position, [])
+            # to prevent accumulating the same error in inserts
+            if len(inserts) and inserts[-1] == argmax_phn:
+                return
+            # to prevent duplication of the same phn in inserts as in replace
+            if (
+                not len(inserts)
+                and meta["replaces"].get(target_position - 1, None) == argmax_phn
+            ):
+                return
+            inserts.append(argmax_phn)
+            meta[reason][target_position] = inserts
         else:
-            meta[reason][len(meta["target"])] = argmax_phn
+            meta[reason][target_position] = argmax_phn
         meta["errors"] += 1
 
 
