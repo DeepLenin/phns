@@ -73,40 +73,44 @@ def closest(phns, graph, tensor_dict=None, threshold=1, ignore=["BLANK", "sil"])
         "ignore": ignore,
     }
 
-    # Check if person started not from beginning, adding all missed steps to errors and target
-    __traverse_tip__("root", raw_match[0], meta)
-    # Check correctness of first matched state
-    __check_step__(0, emissions, meta, "replaces")
-    __append_step__(0, meta)
-
     # Traverse through all pronounced phonemes by user to check their correctness
-    for prev_phn_index in range(len(argmax_phns) - 1):
-        orig_phn_index = prev_phn_index + 1
+    prev_node_idx = None
+    for step_idx in range(len(argmax_phns)):
+        node_idx = meta["raw_match"][step_idx]
+        node = meta["graph"].nodes[node_idx]
+
+        step = {
+            "node_phn": str(node.value),
+            "node_logprob": emissions[step_idx][node_idx],
+            "argmax_phn": str(meta["argmax_phns"][step_idx]),
+        }
+        step["threshold_failed"] = step["node_logprob"] < meta["log_threshold"]
+
+        if step["threshold_failed"] and step["argmax_phn"] in meta["ignore"]:
+            continue
 
         # # If same phoneme as in previous step matched - then user made a mistake
         # # Add it to "inserts" errors and we're staying on same step
-        if raw_match[prev_phn_index] == raw_match[orig_phn_index]:
-            __check_step__(orig_phn_index, emissions, meta, "inserts")
+        if prev_node_idx == node_idx:
+            __check_step__(step, meta, "inserts")
         else:
             # If distance from prev phoneme to current more than one through
             # graph - we need to find shortest path and add extra phonemes in
             # it to errors
-            if (
-                graph.distance_matrix[
-                    raw_match[prev_phn_index], raw_match[orig_phn_index]
-                ]
-                > 1
-            ):
-                __traverse_shortest_path__(
-                    "normal", raw_match[prev_phn_index], raw_match[orig_phn_index], meta
-                )
+            if prev_node_idx is None:
+                # Check if person started not from beginning, adding all missed steps to errors and target
+                __traverse_tip__("root", node_idx, meta)
+            elif graph.distance_matrix[prev_node_idx, node_idx] > 1:
+                __traverse_shortest_path__("normal", prev_node_idx, node_idx, meta)
             # Add state for current phoneme
-            __check_step__(orig_phn_index, emissions, meta, "replaces")
-            __append_step__(orig_phn_index, meta)
+            __check_step__(step, meta, "replaces")
+            meta["target"].append(step["node_phn"])
+
+        prev_node_idx = node_idx
 
     # Check if user pronounced all needed phonemes by traversing (finding
     # shortest path) to tail from last match
-    __traverse_tip__("tail", raw_match[-1], meta)
+    __traverse_tip__("tail", prev_node_idx, meta)
 
     del meta["graph"]
 
@@ -151,39 +155,23 @@ def __traverse_shortest_path__(kind, from_node_index, to_node_index, meta):
         meta["target"].append(str(node.value))
 
 
-def __append_step__(step_index, meta):
-    state_index = meta["raw_match"][step_index]
-    state_node = meta["graph"].nodes[state_index]
-    meta["target"].append(str(state_node.value))
-
-
-def __check_step__(step_index, emissions, meta, reason):
-    state_index = meta["raw_match"][step_index]
-    argmax_phn = str(meta["argmax_phns"][step_index])
-    state_phn = str(meta["graph"].nodes[state_index].value)
-    state_logprob = emissions[step_index][state_index]
-
-    if (
-        state_logprob < meta["log_threshold"]
-        and argmax_phn != state_phn
-        and argmax_phn not in meta["ignore"]
-    ):
+def __check_step__(step, meta, reason):
+    if step["threshold_failed"] and step["argmax_phn"] != step["node_phn"]:
         target_position = len(meta["target"])
         if reason == "inserts":
             inserts = meta[reason].get(target_position, [])
             # to prevent accumulating the same error in inserts
-            if len(inserts) and inserts[-1] == argmax_phn:
+            if len(inserts) and inserts[-1] == step["argmax_phn"]:
                 return
             # to prevent duplication of the same phn in inserts as in replace
-            if (
-                not len(inserts)
-                and meta["replaces"].get(target_position - 1, None) == argmax_phn
+            if not len(inserts) and (
+                meta["replaces"].get(target_position - 1, None) == step["argmax_phn"]
             ):
                 return
-            inserts.append(argmax_phn)
+            inserts.append(step["argmax_phn"])
             meta[reason][target_position] = inserts
         else:
-            meta[reason][target_position] = argmax_phn
+            meta[reason][target_position] = step["argmax_phn"]
         meta["errors"] += 1
 
 
