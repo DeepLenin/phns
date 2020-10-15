@@ -6,14 +6,26 @@ from phns.utils import Dictionary
 
 
 def assert_closest(canonical, closest):
+    changed = []
     for k in ["target", "deletes", "inserts", "replaces"]:
-        assert canonical.get(k) == closest.get(k), k
+        if canonical.get(k) != closest.get(k):
+            changed.append(k)
+
+    if changed:
+        print("Target:", list(enumerate(closest["target"])))
+        print("Match with argmax:", list(zip(closest["match"], closest["argmax_phns"])))
+        print("Nodes:", list(enumerate(closest["graph"].nodes)))
+        print("Matched targets:", closest["matched_targets"])
+        for k in changed:
+            print(f"Expected {k} to equal:\n", canonical[k])
+            print("But got:\n", closest[k])
+        assert False
 
 
 def check_closest_phns(phns, pronunciations, expected_meta):
     graph = Graph()
     graph.attach(pronunciations)
-    meta = closest(phns, graph)
+    meta = closest(phns, graph, debug=True)
     assert_closest(expected_meta, meta)
 
 
@@ -22,7 +34,7 @@ def check_closest_tensor(
 ):
     graph = Graph()
     graph.attach(pronunciations)
-    meta = closest(tensor, graph, tensor_dict=tensor_dict, **kwargs)
+    meta = closest(tensor, graph, tensor_dict=tensor_dict, debug=True, **kwargs)
     assert_closest(expected_meta, meta)
 
 
@@ -35,7 +47,7 @@ def test_phns_closest_no_tail():
         {
             "deletes": {3: "o"},
             "inserts": {},
-            "replaces": {1: "o"},
+            "replaces": {1: ["o"]},
             "target": ["h", "e", "l", "o"],
         },
     )
@@ -50,7 +62,7 @@ def test_tensor_closest_no_tail():
         {
             "deletes": {3: "o"},
             "inserts": {},
-            "replaces": {1: "o"},
+            "replaces": {1: ["o"]},
             "target": ["h", "e", "l", "o"],
         },
     )
@@ -65,7 +77,7 @@ def test_closest_no_longer_tail():
         {
             "deletes": {3: "o", 4: "u"},
             "inserts": {},
-            "replaces": {1: "o"},
+            "replaces": {1: ["o"]},
             "target": ["h", "e", "l", "o", "u"],
         },
     )
@@ -120,7 +132,7 @@ def test_closest_tensor_hol():
         {
             "deletes": {3: "o"},
             "inserts": {},
-            "replaces": {1: "o"},
+            "replaces": {1: ["o"]},
             "target": ["h", "e", "l", "o"],
         },
         threshold=0.4,
@@ -136,7 +148,7 @@ def test_closest_tensor_hol_with_blank():
             [0.1, 0.1, 0.1, 0.1, 0.5, 0.1],  # h
             [0.5, 0.1, 0.1, 0.1, 0.1, 0.1],  # BLANK
             [0.1, 0.1, 0.1, 0.5, 0.1, 0.1],  # o
-            [0.0, 0.1, 0.1, 0.1, 0.1, 0.6],  # l
+            [0.01, 0.1, 0.1, 0.1, 0.1, 0.6],  # l
         ]
     )
 
@@ -147,7 +159,7 @@ def test_closest_tensor_hol_with_blank():
         {
             "deletes": {3: "o"},
             "inserts": {},
-            "replaces": {1: "o"},
+            "replaces": {1: ["o"]},
             "target": ["h", "e", "l", "o"],
         },
         threshold=0.4,
@@ -163,7 +175,7 @@ def test_closest_tensor_hol_with_not_ignored_blank():
             [0.1, 0.1, 0.1, 0.1, 0.5, 0.1],  # h
             [0.5, 0.1, 0.1, 0.1, 0.1, 0.1],  # BLANK
             [0.1, 0.1, 0.1, 0.5, 0.1, 0.1],  # o
-            [0.0, 0.1, 0.1, 0.1, 0.1, 0.6],  # l
+            [0.01, 0.1, 0.1, 0.1, 0.1, 0.6],  # l
         ]
     )
 
@@ -173,8 +185,8 @@ def test_closest_tensor_hol_with_not_ignored_blank():
         pronunciations,
         {
             "deletes": {3: "o"},
-            "inserts": {1: ["BLANK"]},
-            "replaces": {1: "o"},
+            "inserts": {},
+            "replaces": {1: ["BLANK", "o"]},
             "target": ["h", "e", "l", "o"],
         },
         ignore=[],
@@ -201,7 +213,7 @@ def test_closest_tensor_hol_with_insufficient_threshold_with_replace():
         {
             "deletes": {3: "o"},
             "inserts": {},
-            "replaces": {1: "o"},
+            "replaces": {1: ["o"]},
             "target": ["h", "e", "l", "o"],
         },
     )
@@ -264,7 +276,7 @@ def test_closest_tensor_hol_with_sufficient_threshold():
     inp = np.log(
         [
             # blnk, a,   e,   o,   h,   l
-            [0, 0, 0, 0.5, 0.4, 0.1],  # h with threshold
+            [0.01, 0.01, 0.01, 0.5, 0.4, 0.1],  # h with threshold
             [0.1, 0.1, 0.1, 0.5, 0.1, 0.1],  # o
             [0.1, 0.1, 0.1, 0.1, 0.1, 0.5],  # l
         ]
@@ -277,7 +289,7 @@ def test_closest_tensor_hol_with_sufficient_threshold():
         {
             "deletes": {3: "o"},
             "inserts": {},
-            "replaces": {1: "o"},
+            "replaces": {1: ["o"]},
             "target": ["h", "e", "l", "o"],
         },
         threshold=0.4,
@@ -290,7 +302,7 @@ def test_closest_tensor_hol_with_insufficient_threshold():
     inp = np.log(
         [
             # blnk, a,   e,   o,   h,   l
-            [0, 0, 0, 0.5, 0.4, 0.1],  # h with insufficient threshold
+            [0.01, 0.01, 0.01, 0.5, 0.4, 0.1],  # h with insufficient threshold
             [0.1, 0.1, 0.1, 0.5, 0.1, 0.1],  # o
             [0.1, 0.1, 0.1, 0.1, 0.1, 0.5],  # l
         ]
@@ -303,7 +315,7 @@ def test_closest_tensor_hol_with_insufficient_threshold():
         {
             "deletes": {3: "o"},
             "inserts": {},
-            "replaces": {0: "o", 1: "o"},
+            "replaces": {0: ["o"], 1: ["o"]},
             "target": ["h", "e", "l", "o"],
         },
     )
@@ -312,6 +324,7 @@ def test_closest_tensor_hol_with_insufficient_threshold():
 def test_closest_tensor_compresses_repeated_errors():
     tensor_dict = Dictionary(["BLANK", "a", "e", "o", "h", "l"])
     pronunciations = {tuple("helo"): 1, tuple("halo"): 2}
+    np.seterr(divide="ignore")
     inp = np.log(
         [
             # blnk, a,   e,   o,   h,   l
@@ -323,6 +336,7 @@ def test_closest_tensor_compresses_repeated_errors():
             [0.1, 0.1, 0.1, 0.5, 0.1, 0.1],  # o
         ]
     )
+    np.seterr(divide="warn")
 
     check_closest_tensor(
         inp,
@@ -331,7 +345,7 @@ def test_closest_tensor_compresses_repeated_errors():
         {
             "deletes": {},
             "inserts": {},
-            "replaces": {0: "o"},
+            "replaces": {0: ["o"]},
             "target": ["h", "a", "l", "o"],
         },
         threshold=0.5,
@@ -437,6 +451,180 @@ def test_closest_tensor_when_first_step_is_ignored_and_no_errors():
         inp,
         tensor_dict,
         pronunciations,
-        {"deletes": {}, "inserts": {}, "replaces": {}, "target": ["h", "e", "l", "o"],},
+        {"deletes": {}, "inserts": {}, "replaces": {}, "target": ["h", "e", "l", "o"]},
         threshold=0.4,
+    )
+
+
+def test_closest_tensor_when_clip():
+    tensor_dict = Dictionary(["BLANK", "a", "e", "o", "h", "l"])
+    pronunciations = {tuple("helo"): 1, tuple("halo"): 2}
+    inp = np.log(
+        [
+            # blnk, a,   e,   o,   h,   l
+            [0.1, 0.1, 0.1, 0.1, 0.5, 0.1],  # h
+            [0.1, 0.1, 0.5, 0.1, 0.1, 0.1],  # e
+            [0.1, 0.1, 0.1, 0.1, 0.1, 0.5],  # l
+            [0.1, 0.1, 0.1, 0.5, 0.1, 0.1],  # o
+            [0.8, 0.1, 0.1, 0.01, 0.1, 0.1],  #
+            [0.8, 0.1, 0.1, 0.01, 0.1, 0.1],  #
+            [0.8, 0.1, 0.1, 0.01, 0.1, 0.1],  #
+            [0.8, 0.1, 0.1, 0.01, 0.1, 0.1],  #
+        ]
+    )
+
+    check_closest_tensor(
+        inp,
+        tensor_dict,
+        pronunciations,
+        {"deletes": {}, "inserts": {}, "replaces": {}, "target": ["h", "e", "l", "o"]},
+        threshold=0.4,
+        clip=0.1,
+    )
+
+
+def test_closest_tensor_when_helol():
+    tensor_dict = Dictionary(["BLANK", "a", "e", "o", "h", "l"])
+    pronunciations = {tuple("helo"): 1, tuple("halo"): 2}
+    inp = np.log(
+        [
+            # blnk, a,   e,   o,   h,   l
+            [0.1, 0.1, 0.1, 0.1, 0.5, 0.1],  # h
+            [0.1, 0.1, 0.5, 0.1, 0.1, 0.1],  # e
+            [0.1, 0.1, 0.1, 0.1, 0.1, 0.5],  # l
+            [0.1, 0.1, 0.1, 0.5, 0.1, 0.1],  # o
+            [0.1, 0.1, 0.1, 0.1, 0.1, 0.5],  # l
+            [0.1, 0.1, 0.1, 0.1, 0.1, 0.5],  # l
+        ]
+    )
+
+    check_closest_tensor(
+        inp,
+        tensor_dict,
+        pronunciations,
+        {
+            "deletes": {},
+            "inserts": {},
+            "replaces": {3: ["o", "l"]},
+            "target": ["h", "e", "l", "o"],
+        },
+        threshold=0.4,
+        clip=0.1,
+    )
+
+
+def test_closest_tensor_when_heol():
+    tensor_dict = Dictionary(["BLANK", "a", "e", "o", "h", "l"])
+    pronunciations = {tuple("helo"): 1, tuple("halo"): 2}
+    inp = np.log(
+        [
+            # blnk, a,   e,   o,   h,   l
+            [0.1, 0.1, 0.1, 0.1, 0.5, 0.1],  # h
+            [0.1, 0.1, 0.5, 0.1, 0.1, 0.1],  # e
+            [0.1, 0.1, 0.1, 0.5, 0.1, 0.1],  # o
+            [0.1, 0.1, 0.1, 0.1, 0.1, 0.5],  # l
+            [0.1, 0.1, 0.1, 0.1, 0.1, 0.5],  # l
+        ]
+    )
+
+    check_closest_tensor(
+        inp,
+        tensor_dict,
+        pronunciations,
+        {
+            "deletes": {3: "o"},
+            "inserts": {2: ["o"]},
+            "replaces": {},
+            "target": ["h", "e", "l", "o"],
+        },
+        threshold=0.4,
+        clip=0.1,
+    )
+
+
+def test_closest_tensor_when_heol2():
+    tensor_dict = Dictionary(["BLANK", "a", "e", "o", "h", "l"])
+    pronunciations = {tuple("helo"): 1, tuple("halo"): 2}
+    inp = np.log(
+        [
+            # blnk, a,   e,   o,   h,   l
+            [0.1, 0.1, 0.1, 0.1, 0.5, 0.1],  # h
+            [0.1, 0.1, 0.5, 0.1, 0.1, 0.1],  # e
+            [0.1, 0.1, 0.1, 0.5, 0.1, 0.1],  # o
+            [0.1, 0.1, 0.1, 0.5, 0.1, 0.1],  # o
+            [0.1, 0.1, 0.1, 0.1, 0.1, 0.5],  # l
+        ]
+    )
+
+    check_closest_tensor(
+        inp,
+        tensor_dict,
+        pronunciations,
+        {
+            "deletes": {2: "l"},
+            "inserts": {4: ["l"]},
+            "replaces": {},
+            "target": ["h", "e", "l", "o"],
+        },
+        threshold=0.4,
+        clip=0.1,
+    )
+
+
+def test_closest_tensor_when_heol3():
+    tensor_dict = Dictionary(["BLANK", "a", "e", "o", "h", "l"])
+    pronunciations = {tuple("helo"): 1, tuple("halo"): 2}
+    inp = np.log(
+        [
+            # blnk, a,   e,   o,   h,   l
+            [0.1, 0.1, 0.1, 0.1, 0.5, 0.1],  # h
+            [0.1, 0.1, 0.5, 0.1, 0.1, 0.1],  # e
+            [0.1, 0.1, 0.1, 0.5, 0.1, 0.2],  # o
+            [0.1, 0.1, 0.1, 0.1, 0.1, 0.5],  # l
+            [0.1, 0.1, 0.1, 0.1, 0.1, 0.5],  # l
+        ]
+    )
+
+    check_closest_tensor(
+        inp,
+        tensor_dict,
+        pronunciations,
+        {
+            "deletes": {3: "o"},
+            "inserts": {2: ["o"]},
+            "replaces": {},
+            "target": ["h", "e", "l", "o"],
+        },
+        threshold=0.4,
+        clip=0.1,
+    )
+
+
+def test_closest_tensor_when_heoal():
+    tensor_dict = Dictionary(["BLANK", "a", "e", "o", "h", "l"])
+    pronunciations = {tuple("helo"): 1, tuple("halo"): 2}
+    inp = np.log(
+        [
+            # blnk, a,   e,   o,   h,   l
+            [0.1, 0.1, 0.1, 0.1, 0.5, 0.1],  # h
+            [0.1, 0.1, 0.5, 0.1, 0.1, 0.1],  # e
+            [0.1, 0.1, 0.1, 0.5, 0.1, 0.2],  # o
+            [0.1, 0.5, 0.1, 0.1, 0.1, 0.2],  # a
+            [0.1, 0.1, 0.1, 0.1, 0.1, 0.5],  # l
+            [0.1, 0.1, 0.1, 0.1, 0.1, 0.5],  # l
+        ]
+    )
+
+    check_closest_tensor(
+        inp,
+        tensor_dict,
+        pronunciations,
+        {
+            "deletes": {3: "o"},
+            "inserts": {2: ["o", "a"]},
+            "replaces": {},
+            "target": ["h", "e", "l", "o"],
+        },
+        threshold=0.4,
+        clip=0.1,
     )

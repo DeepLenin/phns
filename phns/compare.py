@@ -3,7 +3,15 @@ import numpy as np
 from .utils.viterbi import viterbi
 
 
-def closest(phns, graph, tensor_dict=None, threshold=1, ignore=["BLANK", "sil"]):
+def closest(
+    phns,
+    graph,
+    tensor_dict=None,
+    threshold=1,
+    clip=0.01,
+    ignore=["BLANK", "sil"],
+    debug=False,
+):
     """Finding closest target path in all available variants by provided logprobs or spoken phonemes
 
     Method does following:
@@ -42,6 +50,7 @@ def closest(phns, graph, tensor_dict=None, threshold=1, ignore=["BLANK", "sil"])
     log_threshold = np.log(threshold)
     if tensor_dict:  # logits with dimensions TxD (time step X dict)
         emissions = __tensor_to_emissions__(phns, graph, tensor_dict)
+        emissions = np.clip(emissions, np.log(clip), None)
         # may be use not an argmax but taking into account previous immediate error
         # so we can compare to use with threshold
         argmax_phns = [tensor_dict.id_to_phn[code] for code in phns.argmax(axis=1)]
@@ -51,7 +60,7 @@ def closest(phns, graph, tensor_dict=None, threshold=1, ignore=["BLANK", "sil"])
 
     # Run viterbi on emissions
     with np.errstate(divide="ignore"):
-        raw_match = viterbi(
+        match = viterbi(
             emissions,
             np.log(graph.transition_matrix),
             np.log(graph.initial_transitions),
@@ -65,7 +74,7 @@ def closest(phns, graph, tensor_dict=None, threshold=1, ignore=["BLANK", "sil"])
         "target": [],
         "errors": 0,
         # private
-        "raw_match": raw_match.tolist(),
+        "match": match.tolist(),
         "argmax_phns": argmax_phns,
         "graph": graph,
         "threshold": threshold,
@@ -74,53 +83,73 @@ def closest(phns, graph, tensor_dict=None, threshold=1, ignore=["BLANK", "sil"])
     }
 
     # Traverse through all pronounced phonemes by user to check their correctness
-    prev_node_idx = None
+    prev_node_idx = None  # to ignore blanks/sil
+    matched_targets = {}  # for correct error placement
     for step_idx in range(len(argmax_phns)):
-        node_idx = meta["raw_match"][step_idx]
+        node_idx = meta["match"][step_idx]
         node = meta["graph"].nodes[node_idx]
+        node_phn = str(node.value)
+        node_logprob = emissions[step_idx][node_idx]
+        argmax_phn = str(meta["argmax_phns"][step_idx])
 
-        step = {
-            "node_phn": str(node.value),
-            "node_logprob": emissions[step_idx][node_idx],
-            "argmax_phn": str(meta["argmax_phns"][step_idx]),
-        }
-        step["threshold_failed"] = step["node_logprob"] < meta["log_threshold"]
+        threshold_failed = node_logprob < meta["log_threshold"]
+        match_failed = threshold_failed and argmax_phn != node_phn
 
-        if step["threshold_failed"] and step["argmax_phn"] in meta["ignore"]:
+        if threshold_failed and argmax_phn in meta["ignore"]:
             continue
 
-        # # If same phoneme as in previous step matched - then user made a mistake
-        # # Add it to "inserts" errors and we're staying on same step
-        if prev_node_idx == node_idx:
-            __check_step__(step, meta, "inserts")
-        else:
-            # If distance from prev phoneme to current more than one through
-            # graph - we need to find shortest path and add extra phonemes in
-            # it to errors
-            if prev_node_idx is None:
-                # Check if person started not from beginning, adding all missed steps to errors and target
-                __traverse_tip__("root", node_idx, meta)
-            elif graph.distance_matrix[prev_node_idx, node_idx] > 1:
-                __traverse_shortest_path__("normal", prev_node_idx, node_idx, meta)
-            # Add state for current phoneme
-            __check_step__(step, meta, "replaces")
-            meta["target"].append(step["node_phn"])
+        # Check if started not from beginning, adding all missed steps to errors and target
+        if prev_node_idx is None:
+            __traverse_tip__("root", node_idx, meta)
+        # If distance from prev phoneme to current more than one through
+        # graph - we need to find shortest path and add extra phonemes in
+        # it to errors
+        elif graph.distance_matrix[prev_node_idx, node_idx] > 1:
+            __traverse_shortest_path__("normal", prev_node_idx, node_idx, meta)
 
+        if prev_node_idx != node_idx:
+            meta["target"].append(node_phn)
+
+        target_position = len(meta["target"]) - 1
+        if not match_failed and target_position not in matched_targets:
+            matched_targets[target_position] = step_idx
         prev_node_idx = node_idx
+
+        error_position = target_position + 1
+        if target_position not in matched_targets:
+            error_position -= 1
+
+        inserts = meta["inserts"].get(error_position, [])
+        if match_failed or (target_position in matched_targets and inserts):
+            # to prevent accumulating the same error in inserts
+            if not inserts or inserts[-1] != argmax_phn:
+                inserts.append(argmax_phn)
+                meta["inserts"][error_position] = inserts
+                meta["errors"] += 1
 
     # Check if user pronounced all needed phonemes by traversing (finding
     # shortest path) to tail from last match
     __traverse_tip__("tail", prev_node_idx, meta)
 
-    del meta["graph"]
+    meta["matched_targets"] = matched_targets
+    if not debug:
+        keep_keys = ["inserts", "deletes", "replaces", "target", "errors"]
+        for key in list(meta.keys()):
+            if key not in keep_keys:
+                del meta[key]
 
-    # Replace contiguous "deletes" and "inserts" errors into "replaces"
+    idxs_to_clean = []
+    target_len = len(meta["target"])
     for idx in meta["inserts"]:
-        if idx in meta["deletes"]:
-            del meta["deletes"][idx]
-            phn = meta["inserts"][idx].pop()
-            meta["replaces"][idx] = str(phn)
-            meta["errors"] -= 1
+        if idx in meta["deletes"] or (idx not in matched_targets and idx < target_len):
+            if idx in meta["deletes"]:
+                del meta["deletes"][idx]
+                meta["errors"] -= 1
+            idxs_to_clean.append(idx)
+            meta["replaces"][idx] = meta["inserts"][idx]
+
+    for idx in idxs_to_clean:
+        del meta["inserts"][idx]
 
     # Find error rate
     meta["cer"] = meta["errors"] / len(meta["target"])
@@ -153,26 +182,6 @@ def __traverse_shortest_path__(kind, from_node_index, to_node_index, meta):
         meta["deletes"][len(meta["target"])] = str(node.value)
         meta["errors"] += 1
         meta["target"].append(str(node.value))
-
-
-def __check_step__(step, meta, reason):
-    if step["threshold_failed"] and step["argmax_phn"] != step["node_phn"]:
-        target_position = len(meta["target"])
-        if reason == "inserts":
-            inserts = meta[reason].get(target_position, [])
-            # to prevent accumulating the same error in inserts
-            if len(inserts) and inserts[-1] == step["argmax_phn"]:
-                return
-            # to prevent duplication of the same phn in inserts as in replace
-            if not len(inserts) and (
-                meta["replaces"].get(target_position - 1, None) == step["argmax_phn"]
-            ):
-                return
-            inserts.append(step["argmax_phn"])
-            meta[reason][target_position] = inserts
-        else:
-            meta[reason][target_position] = step["argmax_phn"]
-        meta["errors"] += 1
 
 
 def __traverse_tip__(kind, state_index, meta):
