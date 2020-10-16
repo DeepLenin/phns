@@ -89,14 +89,6 @@ def closest(
         "log_threshold": log_threshold,
         "ignore": ignore,
     }
-    if tensor_dict:
-        meta["preds"] = __get_preds__(emissions, meta)
-        meta["single_char_target"] = utils.single_char_encode(meta["target"])
-        meta["single_char_preds"] = utils.single_char_encode(meta["preds"])
-        meta["dmp_diff"] = dmp.diff_main(
-            meta["single_char_target"], meta["single_char_preds"]
-        )
-        meta["dmp_errors"] = dmp.diff_levenshtein(meta["dmp_diff"])
 
     # Traverse through all pronounced phonemes by user to check their correctness
     prev_node_idx = None  # to ignore blanks/sil
@@ -146,6 +138,15 @@ def closest(
     # Check if user pronounced all needed phonemes by traversing (finding
     # shortest path) to tail from last match
     __traverse_tip__("tail", prev_node_idx, meta)
+
+    if tensor_dict:
+        meta["preds"] = __get_preds__(emissions, meta)
+        meta["single_char_target"] = utils.single_char_encode(meta["target"])
+        meta["single_char_preds"] = utils.single_char_encode(meta["preds"])
+        meta["dmp_diff"] = dmp.diff_main(
+            meta["single_char_target"], meta["single_char_preds"]
+        )
+        meta["dmp_errors"] = dmp.diff_levenshtein(meta["dmp_diff"])
 
     meta["matched_targets"] = matched_targets
     if not debug:
