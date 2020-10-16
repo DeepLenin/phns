@@ -7,6 +7,6 @@ setuptools.setup(
     description="A small package",
     python_requires=">=3.6",
     packages=setuptools.find_packages(),
-    install_requires=["scipy"],
+    install_requires=["scipy", "diff_match_patch"],
     include_package_data=True,
 )
