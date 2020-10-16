@@ -170,13 +170,13 @@ def test_closest_tensor_hol_with_blank():
 
 
 def test_closest_tensor_hol_with_not_ignored_blank():
-    tensor_dict = Dictionary(["BLANK", "ah", "eh", "ow", "hh", "l"])
+    tensor_dict = Dictionary(["sil", "ah", "eh", "ow", "hh", "l"])
     pronunciations = {("hh", "eh", "l", "ow"): 1, ("hh", "ah", "l", "ow"): 2}
     inp = np.log(
         [
-            # blnk, a,   e,   o,   h,   l
+            # sil, a,   e,   o,   h,   l
             [0.1, 0.1, 0.1, 0.1, 0.5, 0.1],  # h
-            [0.5, 0.1, 0.1, 0.1, 0.1, 0.1],  # BLANK
+            [0.5, 0.1, 0.1, 0.1, 0.1, 0.1],  # sil
             [0.1, 0.1, 0.1, 0.5, 0.1, 0.1],  # o
             [0.01, 0.1, 0.1, 0.1, 0.1, 0.6],  # l
         ]
@@ -189,7 +189,7 @@ def test_closest_tensor_hol_with_not_ignored_blank():
         {
             "deletes": {3: "ow"},
             "inserts": {},
-            "replaces": {1: ["BLANK", "ow"]},
+            "replaces": {1: ["sil", "ow"]},
             "target": ["hh", "eh", "l", "ow"],
         },
         ignore=[],
@@ -641,3 +641,28 @@ def test_closest_tensor_when_heoal():
         threshold=0.4,
         clip=0.1,
     )
+
+
+def test_closest_dmp():
+    tensor_dict = Dictionary(["BLANK", "ah", "eh", "ow", "hh", "l"])
+    pronunciations = {("hh", "eh", "l", "ow"): 1, ("hh", "ah", "l", "ow"): 2}
+    inp = np.log(
+        [
+            # blnk, a,   e,   o,   h,   l
+            [0.1, 0.1, 0.1, 0.1, 0.5, 0.1],  # h
+            [0.1, 0.1, 0.5, 0.1, 0.1, 0.1],  # e
+            [0.1, 0.1, 0.1, 0.5, 0.1, 0.2],  # o
+            [0.1, 0.5, 0.1, 0.1, 0.1, 0.2],  # a
+            [0.1, 0.1, 0.1, 0.1, 0.1, 0.5],  # l
+            [0.1, 0.1, 0.1, 0.1, 0.1, 0.5],  # l
+        ]
+    )
+    graph = Graph()
+    graph.attach(pronunciations)
+    meta = closest(
+        inp, graph, tensor_dict=tensor_dict, debug=True, threshold=0.4, clip=0.1
+    )
+
+    preds = ["hh", "eh", "ow", "ah", "l"]
+
+    assert preds == meta["preds"]

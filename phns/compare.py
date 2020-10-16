@@ -90,7 +90,7 @@ def closest(
         "ignore": ignore,
     }
     if tensor_dict:
-        meta["preds"] = __get_preds__(phns_or_logprobs, meta)
+        meta["preds"] = __get_preds__(emissions, meta)
         meta["single_char_target"] = utils.single_char_encode(meta["target"])
         meta["single_char_preds"] = utils.single_char_encode(meta["preds"])
         meta["dmp_diff"] = dmp.diff_main(
