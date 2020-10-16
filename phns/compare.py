@@ -1,10 +1,12 @@
 import numpy as np
+from diff_match_patch import diff_match_patch
 
+from . import utils
 from .utils.viterbi import viterbi
 
 
 def closest(
-    phns,
+    phns_or_logprobs,
     graph,
     tensor_dict=None,
     threshold=1,
@@ -22,13 +24,14 @@ def closest(
     - Find error rate
 
     Args:
-        phns (np.array|List[String]): Logprobs matrix or spoken phonemes list
+        phns_or_logprobs (np.array|List[String]): Logprobs matrix or spoken phonemes list
         graph (phns.Graph): Graph with all variants of target pronounciation
         tensor_dict (phns.utils.Dictionary): Object with phonemes mapping information
         ignore (List[String]): List of dictionary values to ignore when calculating errors
             Defaults to BLANK and sil
         threshold (float): Value from 0 to 1. Using to check if matched phoneme
             higher than this threshold to find errors
+        clip (float): Value from 0 to 1. Using to clip predictions from below.
 
     Returns:
         meta (dict):
@@ -44,19 +47,24 @@ def closest(
             - "ignore": input arg "ignore"
             - "cer": error rate (total errors/matched target length)
             - "cmu_cer": error rate (total errors/graph length)
+            - "dmp_cer": error rate according to diff_match_patch
     """
+
+    dmp = diff_match_patch()
 
     # Translate input (logprobs or phonemes) to emissions matrix
     log_threshold = np.log(threshold)
     if tensor_dict:  # logits with dimensions TxD (time step X dict)
-        emissions = __tensor_to_emissions__(phns, graph, tensor_dict)
+        emissions = __tensor_to_emissions__(phns_or_logprobs, graph, tensor_dict)
         emissions = np.clip(emissions, np.log(clip), None)
         # may be use not an argmax but taking into account previous immediate error
         # so we can compare to use with threshold
-        argmax_phns = [tensor_dict.id_to_phn[code] for code in phns.argmax(axis=1)]
+        argmax_phns = [
+            tensor_dict.id_to_phn[code] for code in phns_or_logprobs.argmax(axis=1)
+        ]
     else:
-        emissions = np.log(__phns_to_emissions__(phns, graph))
-        argmax_phns = phns
+        emissions = np.log(__phns_to_emissions__(phns_or_logprobs, graph))
+        argmax_phns = phns_or_logprobs
 
     # Run viterbi on emissions
     with np.errstate(divide="ignore"):
@@ -81,6 +89,14 @@ def closest(
         "log_threshold": log_threshold,
         "ignore": ignore,
     }
+    if tensor_dict:
+        meta["preds"] = __get_preds__(phns_or_logprobs, meta)
+        meta["single_char_target"] = utils.single_char_encode(meta["target"])
+        meta["single_char_preds"] = utils.single_char_encode(meta["preds"])
+        meta["dmp_diff"] = dmp.diff_main(
+            meta["single_char_target"], meta["single_char_preds"]
+        )
+        meta["dmp_errors"] = dmp.diff_levenshtein(meta["dmp_diff"])
 
     # Traverse through all pronounced phonemes by user to check their correctness
     prev_node_idx = None  # to ignore blanks/sil
@@ -133,7 +149,7 @@ def closest(
 
     meta["matched_targets"] = matched_targets
     if not debug:
-        keep_keys = ["inserts", "deletes", "replaces", "target", "errors"]
+        keep_keys = ["inserts", "deletes", "replaces", "target", "errors", "dmp_errors"]
         for key in list(meta.keys()):
             if key not in keep_keys:
                 del meta[key]
@@ -154,7 +170,21 @@ def closest(
     # Find error rate
     meta["cer"] = meta["errors"] / len(meta["target"])
     meta["cmu_cer"] = meta["errors"] / graph.max_length
+    if tensor_dict:
+        meta["dmp_cer"] = meta["dmp_errors"] / graph.max_length
     return meta
+
+
+def __get_preds__(logprobs, meta):
+    result = []
+    for step_idx, (step_logprobs, matched) in enumerate(zip(logprobs, meta["match"])):
+        if step_logprobs[matched] < meta["log_threshold"]:
+            result.append(meta["argmax_phns"][step_idx])
+        else:
+            result.append(str(meta["graph"].nodes[matched].value))
+    result = [phn for phn in result if phn not in meta["ignore"]]
+    result = utils.remove_doubles(result)
+    return result
 
 
 def __traverse_shortest_path__(kind, from_node_index, to_node_index, meta):
@@ -207,19 +237,19 @@ def __traverse_tip__(kind, state_index, meta):
         __traverse_shortest_path__(kind, closest_tip_index, state_index, meta)
 
 
-def __tensor_to_emissions__(tensor, graph, tensor_dict):
-    emissions = np.empty((tensor.shape[0], len(graph.nodes)), tensor.dtype)
+def __tensor_to_emissions__(logprobs, graph, tensor_dict):
+    emissions = np.empty((logprobs.shape[0], len(graph.nodes)), logprobs.dtype)
     for i, node in enumerate(graph.nodes):
-        emissions[:, i] = tensor[:, tensor_dict.phn_to_id[str(node.value)]]
+        emissions[:, i] = logprobs[:, tensor_dict.phn_to_id[str(node.value)]]
     return emissions
 
 
 # TODO: Move to graph modules
-def __phns_to_emissions__(phns, graph):
-    emissions = np.full((len(phns), len(graph.nodes)), 0.5)
+def __phns_to_emissions__(spoken_phns, graph):
+    emissions = np.full((len(spoken_phns), len(graph.nodes)), 0.5)
 
     indexes = {}
-    for i, phn in enumerate(phns):
+    for i, phn in enumerate(spoken_phns):
         if phn in indexes:
             indexes[phn].append(i)
         else:

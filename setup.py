@@ -8,5 +8,5 @@ setuptools.setup(
     python_requires=">=3.6",
     packages=setuptools.find_packages(),
     install_requires=["scipy"],
-    include_package_data=True
+    include_package_data=True,
 )
