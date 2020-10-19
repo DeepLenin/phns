@@ -169,7 +169,6 @@ def closest(
         del meta["inserts"][idx]
 
     # Find error rate
-    meta["cer"] = meta["errors"] / len(meta["target"])
     meta["cmu_cer"] = meta["errors"] / graph.max_length
     if tensor_dict:
         meta["dmp_cer"] = meta["dmp_errors"] / graph.max_length
