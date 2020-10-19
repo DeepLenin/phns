@@ -2,6 +2,8 @@ from .phn import Phn
 
 
 def flatten(lst):
+    if not lst:
+        return lst
     if isinstance(lst[0], list):
         return [item for sublist in lst for item in sublist]
     else:
@@ -9,6 +11,8 @@ def flatten(lst):
 
 
 def remove_doubles(arr):
+    if not arr:
+        return arr
     res = [arr[0]]
     for el in arr[1:]:
         if el == res[-1]:
