@@ -221,7 +221,7 @@ def __traverse_tip__(kind, state_index, meta):
     else:
         tip_indexes = [root.index for root in meta["graph"].roots]
 
-    if state_index not in tip_indexes:
+    if state_index and state_index not in tip_indexes:
         closest_tip_index = None
         tip_distance = float("inf")
 
