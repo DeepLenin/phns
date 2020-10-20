@@ -1,5 +1,4 @@
 import numpy as np
-from diff_match_patch import diff_match_patch
 
 from . import utils
 from .utils.viterbi import viterbi
@@ -45,12 +44,8 @@ def closest(
             - "graph": input arg "graph"
             - "threshold": input arg "threshold"
             - "ignore": input arg "ignore"
-            - "cer": error rate (total errors/matched target length)
             - "cmu_cer": error rate (total errors/graph length)
-            - "dmp_cer": error rate according to diff_match_patch
     """
-
-    dmp = diff_match_patch()
 
     # Translate input (logprobs or phonemes) to emissions matrix
     log_threshold = np.log(threshold)
@@ -139,15 +134,6 @@ def closest(
     # shortest path) to tail from last match
     __traverse_tip__("tail", prev_node_idx, meta)
 
-    if tensor_dict:
-        meta["preds"] = __get_preds__(emissions, meta)
-        meta["single_char_target"] = utils.single_char_encode(meta["target"])
-        meta["single_char_preds"] = utils.single_char_encode(meta["preds"])
-        meta["dmp_diff"] = dmp.diff_main(
-            meta["single_char_target"], meta["single_char_preds"]
-        )
-        meta["dmp_errors"] = dmp.diff_levenshtein(meta["dmp_diff"])
-
     meta["matched_targets"] = matched_targets
     if not debug:
         keep_keys = ["inserts", "deletes", "replaces", "target", "errors", "dmp_errors"]
@@ -170,8 +156,6 @@ def closest(
 
     # Find error rate
     meta["cmu_cer"] = meta["errors"] / graph.max_length
-    if tensor_dict:
-        meta["dmp_cer"] = meta["dmp_errors"] / graph.max_length
     return meta
 
 
