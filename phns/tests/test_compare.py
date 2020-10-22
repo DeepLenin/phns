@@ -8,13 +8,13 @@ from phns.utils import Dictionary
 def assert_closest(canonical, closest):
     changed = []
     for k in ["target", "deletes", "inserts", "replaces"]:
-        if canonical.get(k) != closest.get(k):
+        if canonical.get(k) != closest[k]:
             changed.append(k)
 
     if changed:
         print("Target:", list(enumerate(closest["target"])))
         print("Match with argmax:", list(zip(closest["match"], closest["argmax_phns"])))
-        print("Nodes:", list(enumerate(closest["graph"].nodes)))
+        print("Nodes:", list(enumerate(closest.graph.nodes)))
         print("Matched targets:", closest["matched_targets"])
         for k in changed:
             print(f"Expected {k} to equal:\n", canonical[k])
@@ -25,7 +25,7 @@ def assert_closest(canonical, closest):
 def check_closest_phns(phns, pronunciations, expected_meta):
     graph = Graph()
     graph.attach(pronunciations)
-    meta = closest(phns, graph, debug=True)
+    meta = closest(phns, graph)
     assert_closest(expected_meta, meta)
 
 
@@ -34,7 +34,7 @@ def check_closest_tensor(
 ):
     graph = Graph()
     graph.attach(pronunciations)
-    meta = closest(tensor, graph, tensor_dict=tensor_dict, debug=True, **kwargs)
+    meta = closest(tensor, graph, tensor_dict=tensor_dict, **kwargs)
     assert_closest(expected_meta, meta)
 
 
