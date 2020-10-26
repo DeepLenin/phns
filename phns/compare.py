@@ -1,6 +1,6 @@
 import numpy as np
-from utils import remove_doubles, single_char_encode
 
+from .utils import remove_doubles, single_char_encode
 from .utils.viterbi import viterbi
 
 
