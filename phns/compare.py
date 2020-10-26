@@ -1,4 +1,5 @@
 import numpy as np
+from utils import remove_doubles, single_char_encode
 
 from .utils.viterbi import viterbi
 
@@ -24,6 +25,19 @@ class Meta:
         self.deletes = {}
         self.replaces = {}
         self.errors = 0
+
+    @property
+    def cleaned_argmax_phns(self):
+        argmax = [phn for phn in self.argmax_phns if phn not in self.ignore]
+        return remove_doubles(argmax)
+
+    @property
+    def sle_argmax_phns(self):
+        return single_char_encode(self.cleaned_argmax_phns())
+
+    @property
+    def sle_target_phns(self):
+        return single_char_encode(self.target)
 
     @property
     def cmu_cer(self):
