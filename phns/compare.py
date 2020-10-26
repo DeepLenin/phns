@@ -33,7 +33,7 @@ class Meta:
 
     @property
     def sle_argmax_phns(self):
-        return single_char_encode(self.cleaned_argmax_phns())
+        return single_char_encode(self.cleaned_argmax_phns)
 
     @property
     def sle_target_phns(self):
